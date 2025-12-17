@@ -43,7 +43,7 @@ def fetchCrowdinAuthToken() -> str:
     print("A Crowdin auth token is required to proceed.")
     print("Please visit https://crowdin.com/settings#api-key")
     print(
-        "Create a personal access token with translations permissions, and enter it below."
+        "Create a personal access token with translations permissions, and enter it below.",
     )
     token = input("Enter Crowdin auth token: ").strip()
     with open(token_path, "w") as f:
@@ -63,7 +63,8 @@ def getCrowdinClient() -> crowdin.CrowdinClient:
     if _crowdinClient is None:
         token = fetchCrowdinAuthToken()
         _crowdinClient = crowdin.CrowdinClient(
-            project_id=CROWDIN_PROJECT_ID, token=token
+            project_id=CROWDIN_PROJECT_ID,
+            token=token,
         )
     return _crowdinClient
 
@@ -291,7 +292,7 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
     storageId = res["data"]["id"]
     print(f"Stored with ID {storageId}")
     print(
-        f"Importing translation for {crowdinFilePath} in {language} from storage with ID {storageId}"
+        f"Importing translation for {crowdinFilePath} in {language} from storage with ID {storageId}",
     )
     res = getCrowdinClient().translations.upload_translation(
         fileId=fileId,
@@ -389,11 +390,11 @@ def exportTranslations(outputDir: str, language: str | None = None):
 
     if language is None:
         print(
-            f"\nExport complete! All translations extracted to '{outputDir}' directory."
+            f"\nExport complete! All translations extracted to '{outputDir}' directory.",
         )
     else:
         print(
-            f"\nExport complete! All {language} translations extracted to '{outputDir}' directory."
+            f"\nExport complete! All {language} translations extracted to '{outputDir}' directory.",
         )
 
 
@@ -479,7 +480,11 @@ class _PoChecker:
         try:
             # When running from source, miscDeps is the sibling of parent this script.
             _MSGFMT = os.path.join(
-                os.path.dirname(__file__), "..", "miscDeps", "tools", "msgfmt.exe"
+                os.path.dirname(__file__),
+                "..",
+                "miscDeps",
+                "tools",
+                "msgfmt.exe",
             )
         except NameError:
             # When running from a frozen executable, __file__ is not defined.
@@ -571,7 +576,7 @@ class _PoChecker:
             self._checkMessage()
         else:
             raise RuntimeError(
-                f"Unexpected command before line {self._messageLineNum}: {lastCommand}"
+                f"Unexpected command before line {self._messageLineNum}: {lastCommand}",
             )
 
         # For first msgstr create the msgstr list
@@ -653,7 +658,7 @@ class _PoChecker:
         out: list[str] = []
         if unnamedPercent:
             out.append(
-                f"unnamed percent interpolations in this order: {unnamedPercent}"
+                f"unnamed percent interpolations in this order: {unnamedPercent}",
             )
         if namedPercent:
             out.append(f"these named percent interpolations: {namedPercent}")
@@ -665,12 +670,12 @@ class _PoChecker:
 
     def _checkMessage(self) -> None:
         idUnnamedPercent, idNamedPercent, idFormats = self._getInterpolations(
-            self._msgid
+            self._msgid,
         )
         if not self._msgstr[-1]:
             return
         strUnnamedPercent, strNamedPercent, strFormats = self._getInterpolations(
-            self._msgstr[-1]
+            self._msgstr[-1],
         )
         error = False
         alerts = []
@@ -769,7 +774,11 @@ def main():
     command_xliff2md.add_argument("mdPath", help="Path to the resulting markdown file")
     command_md2html = commands.add_parser("md2html", help="Convert markdown to html")
     command_md2html.add_argument(
-        "-l", "--lang", help="Language code", action="store", default="en"
+        "-l",
+        "--lang",
+        help="Language code",
+        action="store",
+        default="en",
     )
     command_md2html.add_argument(
         "-t",
@@ -782,7 +791,11 @@ def main():
     command_md2html.add_argument("htmlPath", help="Path to the resulting html file")
     command_xliff2html = commands.add_parser("xliff2html", help="Convert xliff to html")
     command_xliff2html.add_argument(
-        "-l", "--lang", help="Language code", action="store", required=False
+        "-l",
+        "--lang",
+        help="Language code",
+        action="store",
+        required=False,
     )
     command_xliff2html.add_argument(
         "-t",
@@ -880,10 +893,14 @@ def main():
             )
         case "xliff2html":
             lang = args.lang or fetchLanguageFromXliff(
-                args.xliffPath, source=args.untranslated
+                args.xliffPath,
+                source=args.untranslated,
             )
             temp_mdFile = tempfile.NamedTemporaryFile(
-                suffix=".md", delete=False, mode="w", encoding="utf-8"
+                suffix=".md",
+                delete=False,
+                mode="w",
+                encoding="utf-8",
             )
             temp_mdFile.close()
             try:
@@ -922,7 +939,7 @@ def main():
                     badFilePaths.append(poFilePath)
             if badFilePaths:
                 print(
-                    f"\nOne or more po files had fatal errors: {', '.join(badFilePaths)}"
+                    f"\nOne or more po files had fatal errors: {', '.join(badFilePaths)}",
                 )
                 sys.exit(1)
         case "uploadTranslationFile":
@@ -930,7 +947,9 @@ def main():
             needsDelete = False
             if args.crowdinFilePath.endswith(".xliff"):
                 tmp = tempfile.NamedTemporaryFile(
-                    suffix=".xliff", delete=False, mode="w"
+                    suffix=".xliff",
+                    delete=False,
+                    mode="w",
                 )
                 tmp.close()
                 shutil.copyfile(localFilePath, tmp.name)

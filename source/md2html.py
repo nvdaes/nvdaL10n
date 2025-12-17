@@ -232,7 +232,11 @@ def main(source: str, dest: str, lang: str = "en", docType: str | None = None):
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
-        "-l", "--lang", help="Language code", action="store", default="en"
+        "-l",
+        "--lang",
+        help="Language code",
+        action="store",
+        default="en",
     )
     args.add_argument(
         "-t",
