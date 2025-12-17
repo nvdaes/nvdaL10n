@@ -1,6 +1,6 @@
 # A part of NonVisual Desktop Access (NVDA)
 # based on file from https://github.com/jcsteh/osara
-# Copyright (C) 2023-2024 NV Access Limited, James Teh
+# Copyright (C) 2023-2025 NV Access Limited, James Teh
 # This file may be used under the terms of the GNU General Public License, version 2 or later.
 # For more details see: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -10,6 +10,7 @@ import os
 
 import requests
 
+from l10nUtil import getFiles
 
 AUTH_TOKEN = os.getenv("crowdinAuthToken", "").strip()
 if not AUTH_TOKEN:
@@ -46,8 +47,10 @@ def projectRequest(path: str, **kwargs) -> requests.Response:
 	return request(f"projects/{PROJECT_ID}/{path}", **kwargs)
 
 
-def uploadSourceFile(crowdinFileID: int, localFilePath: str) -> None:
+def uploadSourceFile(localFilePath: str) -> None:
+	files = getFiles()
 	fn = os.path.basename(localFilePath)
+	crowdinFileID = files.get(fn)
 	print(f"Uploading {localFilePath} to Crowdin temporary storage as {fn}")
 	with open(localFilePath, "rb") as f:
 		r = request(
@@ -76,11 +79,11 @@ def main():
 		"uploadSourceFile",
 		help="Upload a source file to Crowdin.",
 	)
-	uploadCommand.add_argument("crowdinFileID", type=int, help="The Crowdin file ID.")
+
 	uploadCommand.add_argument("localFilePath", help="The path to the local file.")
 	args = parser.parse_args()
 	if args.command == "uploadSourceFile":
-		uploadSourceFile(args.crowdinFileID, args.localFilePath)
+		uploadSourceFile(args.localFilePath)
 	else:
 		raise ValueError(f"Unknown command: {args.command}")
 
