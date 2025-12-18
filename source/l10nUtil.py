@@ -30,7 +30,7 @@ import buildVars
 CROWDIN_PROJECT_ID = os.getenv("crowdinProjectID", "").strip()
 POLLING_INTERVAL_SECONDS = 5
 EXPORT_TIMEOUT_SECONDS = 60 * 10  # 10 minutes
-L10N_FILE = os.path.join(os.path.dirname(__file__), "l10n.json")
+L10N_FILE = os.path.join(os.getcwd(), "l10n.json")
 
 
 def fetchCrowdinAuthToken() -> str:
