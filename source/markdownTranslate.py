@@ -23,7 +23,7 @@ import subprocess
 import buildVars
 
 RAW_GITHUB_REPO_URL = (
-	f"https://raw.githubusercontent.com/{buildVars.userAccount}/{buildVars.addon_info['addon_name']}"
+	f"https://raw.githubusercontent.com/nvaccess/nvda"
 )
 re_kcTitle = re.compile(r"^(<!--\s+KC:title:\s*)(.+?)(\s*-->)$")
 re_kcSettingsSection = re.compile(r"^(<!--\s+KC:settingsSection:\s*)(.+?)(\s*-->)$")
