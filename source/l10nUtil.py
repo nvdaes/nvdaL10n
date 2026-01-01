@@ -3,16 +3,9 @@
 # This file is covered by the GNU General Public License.
 # See the file COPYING for more details.
 
-import os
-import sys
-
-sys.path.insert(0, os.getcwd())
-
 import crowdin_api as crowdin
-import tempfile
 import lxml.etree
 import os
-import shutil
 import argparse
 import markdownTranslate
 import requests
@@ -24,13 +17,16 @@ import zipfile
 import time
 import json
 
-import buildVars
 
+projectIds = {
+	"nvda": 598017,
+	"nvdaAddons": 780748,
+}
 
-CROWDIN_PROJECT_ID = os.getenv("crowdinProjectID", "").strip()
 POLLING_INTERVAL_SECONDS = 5
 EXPORT_TIMEOUT_SECONDS = 60 * 10  # 10 minutes
-L10N_FILE = os.path.join(os.getcwd(), "l10n.json")
+
+crowdinProjectId = projectIds["nvda"]
 
 
 def fetchCrowdinAuthToken() -> str:
@@ -61,16 +57,31 @@ def fetchCrowdinAuthToken() -> str:
 _crowdinClient = None
 
 
-def getCrowdinClient() -> crowdin.CrowdinClient:
+def getCrowdinClient(projectId: int) -> crowdin.CrowdinClient:
 	"""
 	Create or fetch the Crowdin client instance.
+	:param projectId: The Crowdin project ID.
 	:return: The Crowdin client
 	"""
 	global _crowdinClient
 	if _crowdinClient is None:
 		token = fetchCrowdinAuthToken()
-		_crowdinClient = crowdin.CrowdinClient(project_id=CROWDIN_PROJECT_ID, token=token)
+		_crowdinClient = crowdin.CrowdinClient(token=token, projectId=projectId)
 	return _crowdinClient
+
+
+def getL10nFile(projectId: int, directory: str | None=None) -> str:
+	"""
+	Get the file path containing file IDs for the given project ID.
+	:param projectId: The project ID (int or str, will be sanitized for filename safety)
+	:param directory: The directory to store the file in. If None, use the home directory.
+	:return: The file path containing file IDs.
+	"""
+
+	if directory is None:
+		directory = os.path.expanduser("~")
+	os.makedirs(directory, exist_ok=True)
+	return os.path.join(directory, f"l10n_{str(projectId)}.json")
 
 
 def fetchLanguageFromXliff(xliffPath: str, source: bool = False) -> str:
@@ -243,97 +254,128 @@ def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: 
 	:param localFilePath: The path to save the local file
 	:param language: The language code to download the translation for
 	"""
-	with open(L10N_FILE, "r", encoding="utf-8") as jsonFile:
-		files = json.load(jsonFile)
-		fileId = files.get(crowdinFilePath)
+	files = getFiles(filter=os.path.basename(crowdinFilePath))
+	fileId = files.get(crowdinFilePath)
 	if fileId is None:
-		files = getFiles()
-		fileId = files.get(crowdinFilePath)
+		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
 	print(f"Requesting export of {crowdinFilePath} for {language} from Crowdin")
-	res = getCrowdinClient().translations.export_project_translation(
-		fileIds=[fileId],
-		targetLanguageId=language,
-	)
-	if res is None:
-		raise ValueError("Crowdin export failed")
+	client = getCrowdinClient(projectId=	crowdinProjectId)
+
+	try:
+		res = client.translations.export_project_translation(
+			fileIds=[fileId],
+			targetLanguageId=language,
+		)
+	except Exception as e:
+		raise RuntimeError(f"Crowdin export request failed: {e}")
+	if res is None or "data" not in res or "url" not in res["data"]:
+		raise ValueError("Crowdin export failed or invalid response")
 	download_url = res["data"]["url"]
 	print(f"Downloading from {download_url}")
+	# Ensure the local directory exists
+	dirname = os.path.dirname(localFilePath)
+	os.makedirs(dirname, exist_ok=True)
+	try:
+		r = requests.get(download_url, timeout=60)
+		r.raise_for_status()
+	except Exception as e:
+		raise RuntimeError(f"Failed to download translation file: {e}")
 	with open(localFilePath, "wb") as f:
-		r = requests.get(download_url)
 		f.write(r.content)
 	print(f"Saved to {localFilePath}")
 
 
-def uploadSourceFile(localFilePath: str):
+def uploadSourceFile(localFilePath: str) -> None:
 	"""
 	Upload a source file to Crowdin.
 	:param localFilePath: The path to the local file to be uploaded
 	"""
-	if not os.path.isfile(L10N_FILE):
-		getFiles()
-	with open(L10N_FILE, "r", encoding="utf-8") as jsonFile:
-		files = json.load(jsonFile)
-	fileId = files.get(localFilePath)
-	if fileId is None:
-		files = getFiles()
-		fileId = files.get(localFilePath)
-	res = getCrowdinClient().storages.add_storage(
-		open(localFilePath, "rb"),
-	)
-	if res is None:
-		raise ValueError("Crowdin storage upload failed")
-	storageId = res["data"]["id"]
-	print(f"Stored with ID {storageId}")
 	filename = os.path.basename(localFilePath)
+	files = getFiles(filter=filename)
+	client = getCrowdinClient(projectId=crowdinProjectId)
+	try:
+		with open(localFilePath, "rb") as f:
+			res = client.storages.add_storage(f)
+		if res is None or "data" not in res or "id" not in res["data"]:
+			raise ValueError("Crowdin storage upload failed or invalid response")
+		storageId = res["data"]["id"]
+	except Exception as e:
+		raise RuntimeError(f"Failed to upload file to Crowdin storage: {e}")
+
+	print(f"Stored with ID {storageId}")
 	fileId = files.get(filename)
 	print(f"File ID: {fileId}")
-	match fileId:
-		case None:
-			if os.path.splitext(filename)[1] == ".pot":
-				title = f"{os.path.splitext(filename)[0]} interface"
-				exportPattern = (
-					f"/{os.path.splitext(filename)[0]}/%two_letters_code%/{os.path.splitext(filename)[0]}.po"
+
+	try:
+		match fileId:
+			case None:
+				ext = os.path.splitext(filename)
+				if ext[1] == ".pot":
+					title = f"{ext[0]} interface"
+					exportPattern = f"/{ext[0]}/%two_letters_code%/{ext[0]}.po"
+				else:
+					title = f"{ext[0]} documentation"
+					exportPattern = f"/{ext[0]}/%two_letters_code%/{filename}"
+				exportOptions = {"exportPattern": exportPattern}
+				print(f"Exporting source file {localFilePath} from storage with ID {storageId}")
+				res = client.source_files.add_file(
+					storageId=storageId,
+					projectId=crowdinProjectId,
+					name=filename,
+					title=title,
+					exportOptions=exportOptions,
 				)
-			else:
-				title = f"{os.path.splitext(filename)[0]} documentation"
-				exportPattern = f"/{os.path.splitext(filename)[0]}/%two_letters_code%/{filename}"
-			exportOptions = {
-				"exportPattern": exportPattern,
-			}
-			print(f"Exporting source file {localFilePath} from storage with ID {storageId}")
-			res = getCrowdinClient().source_files.add_file(
-				storageId=storageId,
-				projectId=CROWDIN_PROJECT_ID,
-				name=filename,
-				title=title,
-				exportOptions=exportOptions,
-			)
-			print("Done")
-		case _:
-			res = getCrowdinClient().source_files.update_file(
-				fileId=fileId,
-				storageId=storageId,
-				projectId=CROWDIN_PROJECT_ID,
-			)
+				if res is None:
+					raise ValueError("Crowdin add_file failed")
+				print("Done")
+			case _:
+				res = client.source_files.update_file(
+					fileId=fileId,
+					storageId=storageId,
+					projectId=crowdinProjectId,
+				)
+				if res is None:
+					raise ValueError("Crowdin update_file failed")
+	except Exception as e:
+		raise RuntimeError(f"Failed to add or update file in Crowdin: {e}")
 
 
-def getFiles() -> dict[str, int]:
-	"""Gets files from Crowdin, and write them to a json file."""
+def getFiles(filter: str | None = None, refresh: bool = False) -> dict[str, int]:
+	"""
+	Gets files from Crowdin, and writes them to a json file for caching.
+	:param filter: Expression to filter the list of files.
+	:param refresh: If True, refresh the files from Crowdin instead of using the cached file.
+	:return: A dictionary mapping file names to their IDs.
+	"""
+	l10nFile = getL10nFile(crowdinProjectId)
+	dictionary: dict[str, int] = {}
+	if refresh or not os.path.isfile(l10nFile):
+		print(f"Fetching files from Crowdin (projectId: {crowdinProjectId})...")
+		client = getCrowdinClient(projectId=	crowdinProjectId)
 
-	addonId = buildVars.addon_info["addon_name"]
-
-	res = getCrowdinClient().source_files.list_files(CROWDIN_PROJECT_ID, filter=addonId)
-	if res is None:
-		raise ValueError("Getting files from Crowdin failed")
-	dictionary = dict()
-	data = res["data"]
-	for file in data:
-		fileInfo = file["data"]
-		name = fileInfo["name"]
-		id = fileInfo["id"]
-		dictionary[name] = id
-	with open(L10N_FILE, "w", encoding="utf-8") as jsonFile:
-		json.dump(dictionary, jsonFile, ensure_ascii=False)
+		res = client.source_files.list_files(crowdinProjectId, filter=filter)
+		if res is None:
+			raise ValueError("Getting files from Crowdin failed")
+		data = res["data"]
+		for file in data:
+			fileInfo = file["data"]
+			name = fileInfo["name"]
+			file_id = fileInfo["id"]
+			dictionary[name] = file_id
+		try:
+			with open(l10nFile, "w", encoding="utf-8") as jsonFile:
+				json.dump(dictionary, jsonFile, ensure_ascii=False, indent='\t')
+			print(f"Cached {len(dictionary)} files to {l10nFile}")
+		except Exception as e:
+			print(f"Failed to write cache file {l10nFile}: {e}")
+	else:
+		try:
+			with open(l10nFile, "r", encoding="utf-8") as jsonFile:
+				dictionary = json.load(jsonFile)
+			print(f"Loaded {len(dictionary)} files from cache: {l10nFile}")
+		except (OSError, json.JSONDecodeError) as e:
+			print(f"Cache file {l10nFile} is missing or corrupted: {e}. Refreshing from Crowdin.")
+			return getFiles(filter=filter, refresh=True)
 	return dictionary
 
 
@@ -344,22 +386,26 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 	:param localFilePath: The path to the local file to be uploaded
 	:param language: The language code to upload the translation for
 	"""
-	with open(L10N_FILE, "r", encoding="utf-8") as jsonFile:
-		files = json.load(jsonFile)
+	files = getFiles(filter=os.path.basename(crowdinFilePath))
 	fileId = files.get(crowdinFilePath)
 	if fileId is None:
-		files = getFiles()
-		fileId = files.get(crowdinFilePath)
+		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
 	print(f"Uploading {localFilePath} to Crowdin")
-	res = getCrowdinClient().storages.add_storage(
-		open(localFilePath, "rb"),
-	)
+	
+	client = getCrowdinClient(projectId=	crowdinProjectId)
+
+	# Use context manager to ensure file is properly closed
+	with open(localFilePath, "rb") as f:
+		res = client.storages.add_storage(f)
+	
 	if res is None:
 		raise ValueError("Crowdin storage upload failed")
+	
 	storageId = res["data"]["id"]
 	print(f"Stored with ID {storageId}")
+	
 	print(f"Importing translation for {crowdinFilePath} in {language} from storage with ID {storageId}")
-	res = getCrowdinClient().translations.upload_translation(
+	res = client.translations.upload_translation(
 		fileId=fileId,
 		languageId=language,
 		storageId=storageId,
@@ -380,7 +426,7 @@ def exportTranslations(outputDir: str, language: str | None = None):
 	# Create output directory if it doesn't exist
 	os.makedirs(outputDir, exist_ok=True)
 
-	client = getCrowdinClient()
+	client = getCrowdinClient(projectId=	crowdinProjectId)
 
 	requestData = {
 		"skipUntranslatedStrings": False,
@@ -866,8 +912,7 @@ def main():
 		help="Upload a source file to Crowdin.",
 	)
 	uploadSourceFileCommand.add_argument(
-		"-f",
-		"--localFilePath",
+		"localFilePath",
 		help="The local path to the file.",
 	)
 	exportTranslationsCommand = commands.add_parser(
@@ -889,6 +934,9 @@ def main():
 
 	args = args.parse_args()
 	match args.command:
+		case "downloadTranslationFile":
+			localFilePath = args.localFilePath or args.crowdinFilePath
+			downloadTranslationFile(args.crowdinFilePath, localFilePath, args.language)
 		case "xliff2md":
 			markdownTranslate.generateMarkdown(
 				xliffPath=args.xliffPath,
@@ -896,52 +944,9 @@ def main():
 				translated=not args.untranslated,
 			)
 		case "uploadSourceFile":
+			if not args.localFilePath:
+				raise ValueError("You must specify localFilePath for uploadSourceFile")
 			uploadSourceFile(args.localFilePath)
-		case "getFiles":
-			getFiles()
-		case "downloadTranslationFile":
-			localFilePath = args.localFilePath or args.crowdinFilePath
-			downloadTranslationFile(args.crowdinFilePath, localFilePath, args.language)
-			if args.crowdinFilePath.endswith(".xliff"):
-				preprocessXliff(localFilePath, localFilePath)
-			elif localFilePath.endswith(".po"):
-				success, report = checkPo(localFilePath)
-				if report:
-					print(report)
-				if not success:
-					print(f"\nWarning: Po file {localFilePath} has fatal errors.")
-		case "checkPo":
-			poFilePaths = args.poFilePaths
-			badFilePaths: list[str] = []
-			for poFilePath in poFilePaths:
-				success, report = checkPo(poFilePath)
-				if report:
-					print(report)
-				if not success:
-					badFilePaths.append(poFilePath)
-			if badFilePaths:
-				print(f"\nOne or more po files had fatal errors: {', '.join(badFilePaths)}")
-				sys.exit(1)
-		case "uploadTranslationFile":
-			localFilePath = args.localFilePath or args.crowdinFilePath
-			needsDelete = False
-			if args.crowdinFilePath.endswith(".xliff"):
-				tmp = tempfile.NamedTemporaryFile(suffix=".xliff", delete=False, mode="w")
-				tmp.close()
-				shutil.copyfile(localFilePath, tmp.name)
-				stripXliff(tmp.name, tmp.name, args.old)
-				localFilePath = tmp.name
-				needsDelete = True
-			elif localFilePath.endswith(".po"):
-				success, report = checkPo(localFilePath)
-				if report:
-					print(report)
-				if not success:
-					print(f"\nPo file {localFilePath} has errors. Upload aborted.")
-					sys.exit(1)
-			uploadTranslationFile(args.crowdinFilePath, localFilePath, args.language)
-			if needsDelete:
-				os.remove(localFilePath)
 		case "exportTranslations":
 			exportTranslations(args.output, args.language)
 		case _:
