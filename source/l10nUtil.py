@@ -57,23 +57,21 @@ def fetchCrowdinAuthToken() -> str:
 _crowdinClient = None
 
 
-def getCrowdinClient(projectId: int) -> crowdin.CrowdinClient:
+def getCrowdinClient() -> crowdin.CrowdinClient:
 	"""
 	Create or fetch the Crowdin client instance.
-	:param projectId: The Crowdin project ID.
 	:return: The Crowdin client
 	"""
 	global _crowdinClient
 	if _crowdinClient is None:
 		token = fetchCrowdinAuthToken()
-		_crowdinClient = crowdin.CrowdinClient(token=token, projectId=projectId)
+		_crowdinClient = crowdin.CrowdinClient(token=token, projectId=crowdinProjectId)
 	return _crowdinClient
 
 
-def getL10nFile(projectId: int, directory: str | None=None) -> str:
+def getL10nFile(directory: str | None=None) -> str:
 	"""
 	Get the file path containing file IDs for the given project ID.
-	:param projectId: The project ID (int or str, will be sanitized for filename safety)
 	:param directory: The directory to store the file in. If None, use the home directory.
 	:return: The file path containing file IDs.
 	"""
@@ -81,7 +79,7 @@ def getL10nFile(projectId: int, directory: str | None=None) -> str:
 	if directory is None:
 		directory = os.path.expanduser("~")
 	os.makedirs(directory, exist_ok=True)
-	return os.path.join(directory, f"l10n_{str(projectId)}.json")
+	return os.path.join(directory, f"l10n_{str(crowdinProjectId)}.json")
 
 
 def fetchLanguageFromXliff(xliffPath: str, source: bool = False) -> str:
@@ -247,7 +245,7 @@ def stripXliff(xliffPath: str, outputPath: str, oldXliffPath: str | None = None)
 	print(f"Added or changed {keptTranslations} translations.")
 
 
-def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: str):
+def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: str) -> None:
 	"""
 	Download a translation file from Crowdin.
 	:param crowdinFilePath: The Crowdin file path
@@ -259,7 +257,7 @@ def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: 
 	if fileId is None:
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
 	print(f"Requesting export of {crowdinFilePath} for {language} from Crowdin")
-	client = getCrowdinClient(projectId=	crowdinProjectId)
+	client = getCrowdinClient()
 
 	try:
 		res = client.translations.export_project_translation(
@@ -285,14 +283,14 @@ def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: 
 	print(f"Saved to {localFilePath}")
 
 
-def uploadSourceFile(localFilePath: str) -> None:
+def uploadSourceFile(localFilePath: str | None) -> None:
 	"""
 	Upload a source file to Crowdin.
 	:param localFilePath: The path to the local file to be uploaded
 	"""
 	filename = os.path.basename(localFilePath)
 	files = getFiles(filter=filename)
-	client = getCrowdinClient(projectId=crowdinProjectId)
+	client = getCrowdinClient()
 	try:
 		with open(localFilePath, "rb") as f:
 			res = client.storages.add_storage(f)
@@ -347,11 +345,13 @@ def getFiles(filter: str | None = None, refresh: bool = False) -> dict[str, int]
 	:param refresh: If True, refresh the files from Crowdin instead of using the cached file.
 	:return: A dictionary mapping file names to their IDs.
 	"""
-	l10nFile = getL10nFile(crowdinProjectId)
+
+	l10nFile = getL10nFile()
 	dictionary: dict[str, int] = {}
+
 	if refresh or not os.path.isfile(l10nFile):
 		print(f"Fetching files from Crowdin (projectId: {crowdinProjectId})...")
-		client = getCrowdinClient(projectId=	crowdinProjectId)
+		client = getCrowdinClient()
 
 		res = client.source_files.list_files(crowdinProjectId, filter=filter)
 		if res is None:
@@ -392,7 +392,7 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
 	print(f"Uploading {localFilePath} to Crowdin")
 	
-	client = getCrowdinClient(projectId=	crowdinProjectId)
+	client = getCrowdinClient()
 
 	# Use context manager to ensure file is properly closed
 	with open(localFilePath, "rb") as f:
@@ -415,7 +415,7 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 	print("Done")
 
 
-def exportTranslations(outputDir: str, language: str | None = None):
+def exportTranslations(outputDir: str, language: str | None = None) -> None:
 	"""
 	Export translation files from Crowdin as a bundle.
 	:param outputDir: Directory to save translation files.
@@ -425,9 +425,7 @@ def exportTranslations(outputDir: str, language: str | None = None):
 
 	# Create output directory if it doesn't exist
 	os.makedirs(outputDir, exist_ok=True)
-
-	client = getCrowdinClient(projectId=	crowdinProjectId)
-
+	client = getCrowdinClient()
 	requestData = {
 		"skipUntranslatedStrings": False,
 		"skipUntranslatedFiles": True,
@@ -883,6 +881,8 @@ def main():
 		default=None,
 		help="The path to save the local file. If not provided, the Crowdin file path will be used.",
 	)
+	downloadTranslationFileCommand.add_argument("-p", "--project", type=str, help="Crowdin project name", default=None),
+	downloadTranslationFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None),
 	uploadTranslationFileCommand = commands.add_parser(
 		"uploadTranslationFile",
 		help="Upload a translation file to Crowdin.",
@@ -907,6 +907,8 @@ def main():
 		default=None,
 		help="The path to the local file to be uploaded. If not provided, the Crowdin file path will be used.",
 	)
+	uploadTranslationFileCommand.add_argument("-p", "--project", type=str, help="Crowdin project name", default="nvda"),
+	uploadTranslationFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None),
 	uploadSourceFileCommand = commands.add_parser(
 		"uploadSourceFile",
 		help="Upload a source file to Crowdin.",
@@ -915,6 +917,8 @@ def main():
 		"localFilePath",
 		help="The local path to the file.",
 	)
+	uploadSourceFileCommand.add_argument("-p", "--project", type=str, help="Crowdin project name", default="nvda"),
+	uploadSourceFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None),
 	exportTranslationsCommand = commands.add_parser(
 		"exportTranslations",
 		help="Export translation files from Crowdin as a bundle. If no language is specified, exports all languages.",
@@ -931,8 +935,14 @@ def main():
 		help="Language code to export (e.g., 'es', 'fr', 'de'). If not specified, exports all languages.",
 		default=None,
 	)
+	exportTranslationsCommand.add_argument("-p", "--project", type=str, help="Crowdin project name", default="nvda"),
+	exportTranslationsCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None),
 
 	args = args.parse_args()
+	global crowdinProjectId
+	crowdinProjectId = projectIds.get(args.project)
+	if args.id is not None:
+		crowdinProjectId = args.id
 	match args.command:
 		case "downloadTranslationFile":
 			localFilePath = args.localFilePath or args.crowdinFilePath
