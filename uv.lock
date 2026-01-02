@@ -12,6 +12,15 @@ wheels = [
 ]
 
 [[package]]
+name = "cachetools"
+version = "6.2.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bc/1d/ede8680603f6016887c062a2cf4fc8fdba905866a3ab8831aa8aa651320c/cachetools-6.2.4.tar.gz", hash = "sha256:82c5c05585e70b6ba2d3ae09ea60b79548872185d2f24ae1f2709d37299fd607", size = 31731, upload-time = "2025-12-15T18:24:53.744Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2c/fc/1d7b80d0eb7b714984ce40efc78859c022cd930e402f599d8ca9e39c78a4/cachetools-6.2.4-py3-none-any.whl", hash = "sha256:69a7a52634fed8b8bf6e24a050fb60bff1c9bd8f6d24572b99c32d4e71e62a51", size = 11551, upload-time = "2025-12-15T18:24:52.332Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2025.11.12"
 source = { registry = "https://pypi.org/simple" }
@@ -258,6 +267,7 @@ dependencies = [
     { name = "mdx-truly-sane-lists" },
     { name = "nh3" },
     { name = "pre-commit" },
+    { name = "py2exe" },
     { name = "pyinstaller" },
     { name = "pyright", extra = ["nodejs"] },
     { name = "requests" },
@@ -275,6 +285,7 @@ requires-dist = [
     { name = "mdx-truly-sane-lists", specifier = "==1.3" },
     { name = "nh3", specifier = "==0.3.2" },
     { name = "pre-commit", specifier = "==4.2.0" },
+    { name = "py2exe" },
     { name = "pyinstaller" },
     { name = "pyright", extras = ["nodejs"], specifier = "==1.1.407" },
     { name = "requests", specifier = "==2.32.5" },
@@ -323,6 +334,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/08/39/679ca9b26c7bb2999ff122d50faa301e49af82ca9c066ec061cfbc0c6784/pre_commit-4.2.0.tar.gz", hash = "sha256:601283b9757afd87d40c4c4a9b2b5de9637a8ea02eaff7adc2d0fb4e04841146", size = 193424, upload-time = "2025-03-18T21:35:20.987Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/88/74/a88bf1b1efeae488a0c0b7bdf71429c313722d1fc0f377537fbe554e6180/pre_commit-4.2.0-py2.py3-none-any.whl", hash = "sha256:a009ca7205f1eb497d10b845e52c838a98b6cdd2102a6c8e4540e94ee75c58bd", size = 220707, upload-time = "2025-03-18T21:35:19.343Z" },
+]
+
+[[package]]
+name = "py2exe"
+version = "0.14.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cachetools" },
+    { name = "pefile" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/d1/78ae34c98c56e7b78b3da5765ad22e356d07d935b4cb55f9c5cb036c44cc/py2exe-0.14.0.0-cp313-cp313-win32.whl", hash = "sha256:5b1221a77a63d63eca7c901b80a2c033380c388615ab99245b1c85cb0ea00ebb", size = 148954, upload-time = "2025-07-16T08:42:02.505Z" },
+    { url = "https://files.pythonhosted.org/packages/00/c1/a2489ac7d7e38ccf0e8bce590078aefaec00f8e00923814307377f83c78a/py2exe-0.14.0.0-cp313-cp313-win_amd64.whl", hash = "sha256:ecf5a5e60aba6f66f99fe5a08d3dea3e1c2ee45f3da83ebe3eec961942c2cdf3", size = 156475, upload-time = "2025-07-16T08:42:03.705Z" },
 ]
 
 [[package]]
