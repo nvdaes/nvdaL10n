@@ -1000,6 +1000,9 @@ def main():
 			uploadSourceFile(args.localFilePath)
 		case "exportTranslations":
 			exportTranslations(args.output, args.language)
+		case "uploadTranslationFile":
+			localFilePath = args.localFilePath or args.crowdinFilePath
+			uploadTranslationFile(args.crowdinFilePath, localFilePath, args.language)
 		case _:
 			raise ValueError(f"Unknown command {args.command}")
 
