@@ -334,6 +334,7 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 				)
 				if res is None:
 					raise ValueError("Crowdin update_file failed")
+				print(f"Updated to revision {res["data"]["revisionId"]}")
 	except Exception as e:
 		raise RuntimeError(f"Failed to add or update file in Crowdin: {e}")
 
@@ -941,7 +942,7 @@ def main():
 		type=str,
 		help="Crowdin project name",
 		default="nvdaAddons",
-		choices=list("nvdaAddons"),
+		choices=["nvdaAddons"],
 	)
 	uploadSourceFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 	exportTranslationsCommand = commands.add_parser(
