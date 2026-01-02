@@ -394,7 +394,6 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 		fileId = files.get(crowdinFilePath)
 	if fileId is None:
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
-
 	print(f"Uploading {localFilePath} to Crowdin")
 	client = getCrowdinClient()
 	try:
