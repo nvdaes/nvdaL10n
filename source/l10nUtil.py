@@ -420,7 +420,7 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 		raise RuntimeError(f"Failed to upload translation file: {e}")
 
 
-def exportTranslations(outputDir: str, language: str | None = None) -> None:
+def exportTranslations(outputDir: str, language: str | None = None):
 	"""
 	Export translation files from Crowdin as a bundle.
 	:param outputDir: Directory to save translation files.
@@ -430,7 +430,9 @@ def exportTranslations(outputDir: str, language: str | None = None) -> None:
 
 	# Create output directory if it doesn't exist
 	os.makedirs(outputDir, exist_ok=True)
+
 	client = getCrowdinClient()
+
 	requestData = {
 		"skipUntranslatedStrings": False,
 		"skipUntranslatedFiles": False,
@@ -438,7 +440,7 @@ def exportTranslations(outputDir: str, language: str | None = None) -> None:
 	}
 
 	if language is not None:
-		requestData["languageId"] = language
+		requestData["targetLanguageIds"] = [language]
 
 	if language is None:
 		print("Requesting export of all translations from Crowdin...")
