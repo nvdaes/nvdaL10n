@@ -355,7 +355,7 @@ def getFiles(filter: str | None = None, refresh: bool = False) -> dict[str, int]
 
 		res = client.source_files.list_files(crowdinProjectId, filter=filter)
 		if res is None:
-			raise ValueError("Getting files from Crowdin failed")
+			return getFiles(filter=filter, refresh=True)
 		data = res["data"]
 		for file in data:
 			fileInfo = file["data"]
@@ -386,15 +386,18 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 	:param localFilePath: The path to the local file to be uploaded
 	:param language: The language code to upload the translation for
 	"""
-	files = getFiles(filter=os.path.basename(crowdinFilePath))
+	# Use the basename for lookup, as in downloadTranslationFile
+	basename = os.path.basename(crowdinFilePath)
+	files = getFiles(filter=basename)
 	fileId = files.get(crowdinFilePath)
 	if fileId is None:
+		files = getFiles(filter=basename, refresh=True)
+		fileId = files.get(crowdinFilePath)
+	if fileId is None:
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
-	print(f"Uploading {localFilePath} to Crowdin")
-	
-	client = getCrowdinClient()
 
-	# Use context manager to ensure file is properly closed
+	print(f"Uploading {localFilePath} to Crowdin")
+	client = getCrowdinClient()
 	try:
 		with open(localFilePath, "rb") as f:
 			res = client.storages.add_storage(f)
@@ -410,26 +413,11 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 			autoApproveImported=True,
 			importEqSuggestions=True,
 		)
+		if res is None:
+			raise ValueError("Crowdin translation upload failed")
 		print("Done")
 	except Exception as e:
 		raise RuntimeError(f"Failed to upload translation file: {e}")
-	
-	
-	if res is None:
-		raise ValueError("Crowdin storage upload failed")
-	
-	storageId = res["data"]["id"]
-	print(f"Stored with ID {storageId}")
-	
-	print(f"Importing translation for {crowdinFilePath} in {language} from storage with ID {storageId}")
-	res = client.translations.upload_translation(
-		fileId=fileId,
-		languageId=language,
-		storageId=storageId,
-		autoApproveImported=True,
-		importEqSuggestions=True,
-	)
-	print("Done")
 
 
 def exportTranslations(outputDir: str, language: str | None = None) -> None:
