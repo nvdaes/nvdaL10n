@@ -20,8 +20,6 @@ import difflib
 from dataclasses import dataclass
 import subprocess
 
-import buildVars
-
 RAW_GITHUB_REPO_URL = (
 	f"https://raw.githubusercontent.com/nvaccess/nvda"
 )

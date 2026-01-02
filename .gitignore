@@ -8,3 +8,33 @@ wheels/
 
 # Virtual environments
 .venv
+
+# PyInstaller build artifacts
+*.spec
+*.exe
+*.dll
+*.so
+*.dylib
+build/
+dist/
+*.manifest
+*.tmp
+*.log
+
+# Local build outputs
+build/l10nUtil/
+build/l10nUtil/localpycs/
+build/l10nUtil/*.toc
+build/l10nUtil/*.pyz
+build/l10nUtil/*.html
+build/l10nUtil/*.txt
+build/l10nUtil/*.zip
+build/l10nUtil/*.pkg
+
+# OS and editor files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/

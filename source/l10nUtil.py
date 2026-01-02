@@ -65,7 +65,7 @@ def getCrowdinClient() -> crowdin.CrowdinClient:
 	global _crowdinClient
 	if _crowdinClient is None:
 		token = fetchCrowdinAuthToken()
-		_crowdinClient = crowdin.CrowdinClient(token=token, projectId=crowdinProjectId)
+		_crowdinClient = crowdin.CrowdinClient(token=token, project_id=crowdinProjectId)
 	return _crowdinClient
 
 
@@ -395,8 +395,25 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 	client = getCrowdinClient()
 
 	# Use context manager to ensure file is properly closed
-	with open(localFilePath, "rb") as f:
-		res = client.storages.add_storage(f)
+	try:
+		with open(localFilePath, "rb") as f:
+			res = client.storages.add_storage(f)
+		if res is None or "data" not in res or "id" not in res["data"]:
+			raise ValueError("Crowdin storage upload failed or invalid response")
+		storageId = res["data"]["id"]
+		print(f"Stored with ID {storageId}")
+		print(f"Importing translation for {crowdinFilePath} in {language} from storage with ID {storageId}")
+		res = client.translations.upload_translation(
+			fileId=fileId,
+			languageId=language,
+			storageId=storageId,
+			autoApproveImported=True,
+			importEqSuggestions=True,
+		)
+		print("Done")
+	except Exception as e:
+		raise RuntimeError(f"Failed to upload translation file: {e}")
+	
 	
 	if res is None:
 		raise ValueError("Crowdin storage upload failed")
@@ -428,12 +445,12 @@ def exportTranslations(outputDir: str, language: str | None = None) -> None:
 	client = getCrowdinClient()
 	requestData = {
 		"skipUntranslatedStrings": False,
-		"skipUntranslatedFiles": True,
+		"skipUntranslatedFiles": crowdinProjectId != projectIds["nvda"],  # For NVDA, include untranslated files
 		"exportApprovedOnly": False,
 	}
 
 	if language is not None:
-		requestData["targetLanguageIds"] = [language]
+		requestData["languageId"] = language
 
 	if language is None:
 		print("Requesting export of all translations from Crowdin...")
@@ -881,8 +898,14 @@ def main():
 		default=None,
 		help="The path to save the local file. If not provided, the Crowdin file path will be used.",
 	)
-	downloadTranslationFileCommand.add_argument("-p", "--project", type=str, help="Crowdin project name", default=None),
-	downloadTranslationFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None),
+	downloadTranslationFileCommand.add_argument(
+		"-p", "--project",
+		type=str,
+		help="Crowdin project name",
+		default=None,
+		choices=list(projectIds.keys()),
+	)
+	downloadTranslationFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 	uploadTranslationFileCommand = commands.add_parser(
 		"uploadTranslationFile",
 		help="Upload a translation file to Crowdin.",
@@ -907,8 +930,14 @@ def main():
 		default=None,
 		help="The path to the local file to be uploaded. If not provided, the Crowdin file path will be used.",
 	)
-	uploadTranslationFileCommand.add_argument("-p", "--project", type=str, help="Crowdin project name", default="nvda"),
-	uploadTranslationFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None),
+	uploadTranslationFileCommand.add_argument(
+		"-p", "--project",
+		type=str,
+		help="Crowdin project name",
+		default="nvda",
+		choices=list(projectIds.keys()),
+	)
+	uploadTranslationFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 	uploadSourceFileCommand = commands.add_parser(
 		"uploadSourceFile",
 		help="Upload a source file to Crowdin.",
@@ -917,8 +946,14 @@ def main():
 		"localFilePath",
 		help="The local path to the file.",
 	)
-	uploadSourceFileCommand.add_argument("-p", "--project", type=str, help="Crowdin project name", default="nvda"),
-	uploadSourceFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None),
+	uploadSourceFileCommand.add_argument(
+		"-p", "--project",
+		type=str,
+		help="Crowdin project name",
+		default="nvdaAddons",
+		choices=list("nvdaAddons"),
+	)
+	uploadSourceFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 	exportTranslationsCommand = commands.add_parser(
 		"exportTranslations",
 		help="Export translation files from Crowdin as a bundle. If no language is specified, exports all languages.",
@@ -935,8 +970,14 @@ def main():
 		help="Language code to export (e.g., 'es', 'fr', 'de'). If not specified, exports all languages.",
 		default=None,
 	)
-	exportTranslationsCommand.add_argument("-p", "--project", type=str, help="Crowdin project name", default="nvda"),
-	exportTranslationsCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None),
+	exportTranslationsCommand.add_argument(
+		"-p", "--project",
+		type=str,
+		help="Crowdin project name",
+		default="nvda",
+		choices=list(projectIds.keys()),
+	)
+	exportTranslationsCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 
 	args = args.parse_args()
 	global crowdinProjectId

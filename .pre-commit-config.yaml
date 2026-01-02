@@ -30,7 +30,7 @@ repos:
   hooks:
     # Prevents commits to certain branches
     - id: no-commit-to-branch
-      args: ["--branch", "main", ]
+      args: ["--branch", "main", "--branch", "master", ]
     # Checks that large files have not been added. Default cut-off for "large" files is 500kb.
     - id: check-added-large-files
     # Checks python syntax
@@ -76,7 +76,10 @@ repos:
       args: [ --fix ]
     - id: ruff-format
       name: format with ruff
-
+    - id: uv-lock
+      name: Verify uv lock file
+      # Override python interpreter from .python-versions as that is too strict for pre-commit.ci
+      args: ["-p3.13"]
 - repo: local
   hooks:
 
