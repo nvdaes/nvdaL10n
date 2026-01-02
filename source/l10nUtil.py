@@ -252,13 +252,16 @@ def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: 
 	:param localFilePath: The path to save the local file
 	:param language: The language code to download the translation for
 	"""
-	files = getFiles(filter=os.path.basename(crowdinFilePath))
+	filename = os.path.basename(crowdinFilePath)
+	files = getFiles(filter=filename)
+	fileId = files.get(crowdinFilePath)
+	if fileId is None:
+		files = getFiles(filter=filename, refresh=True)
 	fileId = files.get(crowdinFilePath)
 	if fileId is None:
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
 	print(f"Requesting export of {crowdinFilePath} for {language} from Crowdin")
 	client = getCrowdinClient()
-
 	try:
 		res = client.translations.export_project_translation(
 			fileIds=[fileId],
@@ -890,7 +893,7 @@ def main():
 		"-p", "--project",
 		type=str,
 		help="Crowdin project name",
-		default=None,
+		default="nvda",
 		choices=list(projectIds.keys()),
 	)
 	downloadTranslationFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
