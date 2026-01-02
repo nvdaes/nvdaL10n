@@ -433,7 +433,7 @@ def exportTranslations(outputDir: str, language: str | None = None) -> None:
 	client = getCrowdinClient()
 	requestData = {
 		"skipUntranslatedStrings": False,
-		"skipUntranslatedFiles": crowdinProjectId != projectIds["nvda"],  # For NVDA, include untranslated files
+		"skipUntranslatedFiles": False,
 		"exportApprovedOnly": False,
 	}
 
