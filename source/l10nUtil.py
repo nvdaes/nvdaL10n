@@ -290,6 +290,8 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 	"""
 	filename = os.path.basename(localFilePath)
 	files = getFiles(filter=filename)
+	if files.get(filename) is None:
+		files = getFiles(filter=filename, refresh=True)
 	client = getCrowdinClient()
 	try:
 		with open(localFilePath, "rb") as f:
@@ -299,11 +301,9 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 		storageId = res["data"]["id"]
 	except Exception as e:
 		raise RuntimeError(f"Failed to upload file to Crowdin storage: {e}")
-
 	print(f"Stored with ID {storageId}")
 	fileId = files.get(filename)
 	print(f"File ID: {fileId}")
-
 	try:
 		match fileId:
 			case None:
@@ -349,34 +349,32 @@ def getFiles(filter: str | None = None, refresh: bool = False) -> dict[str, int]
 
 	l10nFile = getL10nFile()
 	dictionary: dict[str, int] = {}
-
-	if refresh or not os.path.isfile(l10nFile):
+	try:
+		with open(l10nFile, "r", encoding="utf-8") as jsonFile:
+			dictionary = json.load(jsonFile)
+			if not refresh:  # Avoid repeating the print if refreshing
+				print(f"Loaded {len(dictionary)} files from cache: {l10nFile}")
+	except (OSError, json.JSONDecodeError) as e:
+		print(f"Cache file {l10nFile} is missing or corrupted: {e}. Refreshing from Crowdin.")
+		refresh = True
+	if refresh:
 		print(f"Fetching files from Crowdin (projectId: {crowdinProjectId})...")
 		client = getCrowdinClient()
-
 		res = client.source_files.list_files(crowdinProjectId, filter=filter)
 		if res is None:
-			return getFiles(filter=filter, refresh=True)
+			raise ValueError("Crowdin list_files failed")
 		data = res["data"]
 		for file in data:
 			fileInfo = file["data"]
 			name = fileInfo["name"]
 			file_id = fileInfo["id"]
-			dictionary[name] = file_id
+			dictionary.update({name: file_id})
 		try:
 			with open(l10nFile, "w", encoding="utf-8") as jsonFile:
 				json.dump(dictionary, jsonFile, ensure_ascii=False, indent='\t')
 			print(f"Cached {len(dictionary)} files to {l10nFile}")
 		except Exception as e:
 			print(f"Failed to write cache file {l10nFile}: {e}")
-	else:
-		try:
-			with open(l10nFile, "r", encoding="utf-8") as jsonFile:
-				dictionary = json.load(jsonFile)
-			print(f"Loaded {len(dictionary)} files from cache: {l10nFile}")
-		except (OSError, json.JSONDecodeError) as e:
-			print(f"Cache file {l10nFile} is missing or corrupted: {e}. Refreshing from Crowdin.")
-			return getFiles(filter=filter, refresh=True)
 	return dictionary
 
 
