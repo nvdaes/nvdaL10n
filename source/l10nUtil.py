@@ -941,8 +941,8 @@ def main():
 		"-p", "--project",
 		type=str,
 		help="Crowdin project name",
-		default="nvdaAddons",
-		choices=["nvdaAddons"],
+		default="nvda",
+		choices=list(projectIds.keys()),
 	)
 	uploadSourceFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 	exportTranslationsCommand = commands.add_parser(
