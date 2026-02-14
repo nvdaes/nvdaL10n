@@ -69,7 +69,7 @@ def getCrowdinClient() -> crowdin.CrowdinClient:
 	return _crowdinClient
 
 
-def getL10nFile(directory: str | None=None) -> str:
+def getL10nFile(directory: str | None = None) -> str:
 	"""
 	Get the file path containing file IDs for the given project ID.
 	:param directory: The directory to store the file in. If None, use the home directory.
@@ -337,7 +337,7 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 				)
 				if res is None:
 					raise ValueError("Crowdin update_file failed")
-				print(f"Updated to revision {res["data"]["revisionId"]}")
+				print(f"Updated to revision {res['data']['revisionId']}")
 	except Exception as e:
 		raise RuntimeError(f"Failed to add or update file in Crowdin: {e}")
 
@@ -374,7 +374,7 @@ def getFiles(filter: str | None = None, refresh: bool = False) -> dict[str, int]
 			dictionary.update({name: file_id})
 		try:
 			with open(l10nFile, "w", encoding="utf-8") as jsonFile:
-				json.dump(dictionary, jsonFile, ensure_ascii=False, indent='\t')
+				json.dump(dictionary, jsonFile, ensure_ascii=False, indent="\t")
 			print(f"Cached {len(dictionary)} files to {l10nFile}")
 		except Exception as e:
 			print(f"Failed to write cache file {l10nFile}: {e}")
@@ -919,13 +919,16 @@ def main():
 		help="The path to save the local file. If not provided, the Crowdin file path will be used.",
 	)
 	downloadTranslationFileCommand.add_argument(
-		"-p", "--project",
+		"-p",
+		"--project",
 		type=str,
 		help="Crowdin project name",
 		default="nvda",
 		choices=list(projectIds.keys()),
 	)
-	downloadTranslationFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
+	downloadTranslationFileCommand.add_argument(
+		"-i", "--id", help="Crowdin project ID", type=int, default=None
+	)
 	uploadTranslationFileCommand = commands.add_parser(
 		"uploadTranslationFile",
 		help="Upload a translation file to Crowdin.",
@@ -951,7 +954,8 @@ def main():
 		help="The path to the local file to be uploaded. If not provided, the Crowdin file path will be used.",
 	)
 	uploadTranslationFileCommand.add_argument(
-		"-p", "--project",
+		"-p",
+		"--project",
 		type=str,
 		help="Crowdin project name",
 		default="nvda",
@@ -967,7 +971,8 @@ def main():
 		help="The local path to the file.",
 	)
 	uploadSourceFileCommand.add_argument(
-		"-p", "--project",
+		"-p",
+		"--project",
 		type=str,
 		help="Crowdin project name",
 		default="nvda",
@@ -991,7 +996,8 @@ def main():
 		default=None,
 	)
 	exportTranslationsCommand.add_argument(
-		"-p", "--project",
+		"-p",
+		"--project",
 		type=str,
 		help="Crowdin project name",
 		default="nvda",
