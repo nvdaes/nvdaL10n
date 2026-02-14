@@ -861,6 +861,35 @@ def main():
 		help="Paths to the po file to check",
 		nargs="+",
 	)
+	command_md2html = commands.add_parser("md2html", help="Convert markdown to html")
+	command_md2html.add_argument("-l", "--lang", help="Language code", action="store", default="en")
+	command_md2html.add_argument(
+		"-t",
+		"--docType",
+		help="Type of document",
+		action="store",
+		choices=["userGuide", "developerGuide", "changes", "keyCommands"],
+	)
+	command_md2html.add_argument("mdPath", help="Path to the markdown file")
+	command_md2html.add_argument("htmlPath", help="Path to the resulting html file")
+	command_xliff2html = commands.add_parser("xliff2html", help="Convert xliff to html")
+	command_xliff2html.add_argument("-l", "--lang", help="Language code", action="store", required=False)
+	command_xliff2html.add_argument(
+		"-t",
+		"--docType",
+		help="Type of document",
+		action="store",
+		choices=["userGuide", "developerGuide", "changes", "keyCommands"],
+	)
+	command_xliff2html.add_argument(
+		"-u",
+		"--untranslated",
+		help="Produce the untranslated markdown file",
+		action="store_true",
+		default=False,
+	)
+	command_xliff2html.add_argument("xliffPath", help="Path to the xliff file")
+	command_xliff2html.add_argument("htmlPath", help="Path to the resulting html file")
 	command_xliff2md = commands.add_parser("xliff2md", help="Convert xliff to markdown")
 	command_xliff2md.add_argument(
 		"-u",
