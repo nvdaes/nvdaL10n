@@ -4,6 +4,7 @@
 # See the file COPYING for more details.
 
 import crowdin_api as crowdin
+import tempfile
 import lxml.etree
 import os
 import argparse
@@ -16,7 +17,6 @@ import subprocess
 import sys
 import zipfile
 import time
-import tempfile
 import json
 
 
