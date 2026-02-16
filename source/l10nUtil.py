@@ -291,6 +291,8 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 	Upload a source file to Crowdin.
 	:param localFilePath: The path to the local file to be uploaded
 	"""
+	if localFilePath is None:
+		raise ValueError("localFilePath must not be None")
 	filename = os.path.basename(localFilePath)
 	files = getFiles(filter=filename)
 	if files.get(filename) is None:
