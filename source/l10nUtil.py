@@ -19,16 +19,8 @@ import zipfile
 import time
 import json
 
-
-projectIds = {
-	"nvda": 598017,
-	"nvdaAddons": 780748,
-}
-
 POLLING_INTERVAL_SECONDS = 5
 EXPORT_TIMEOUT_SECONDS = 60 * 10  # 10 minutes
-
-crowdinProjectId = projectIds["nvda"]
 
 
 def fetchCrowdinAuthToken() -> str:
@@ -932,14 +924,6 @@ def main():
 		help="The path to save the local file. If not provided, the Crowdin file path will be used.",
 	)
 	downloadTranslationFileCommand.add_argument(
-		"-p",
-		"--project",
-		type=str,
-		help="Crowdin project name",
-		default="nvda",
-		choices=list(projectIds.keys()),
-	)
-	downloadTranslationFileCommand.add_argument(
 		"-i", "--id", help="Crowdin project ID", type=int, default=None
 	)
 	uploadTranslationFileCommand = commands.add_parser(
@@ -966,14 +950,6 @@ def main():
 		default=None,
 		help="The path to the local file to be uploaded. If not provided, the Crowdin file path will be used.",
 	)
-	uploadTranslationFileCommand.add_argument(
-		"-p",
-		"--project",
-		type=str,
-		help="Crowdin project name",
-		default="nvda",
-		choices=list(projectIds.keys()),
-	)
 	uploadTranslationFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 	uploadSourceFileCommand = commands.add_parser(
 		"uploadSourceFile",
@@ -982,14 +958,6 @@ def main():
 	uploadSourceFileCommand.add_argument(
 		"localFilePath",
 		help="The local path to the file.",
-	)
-	uploadSourceFileCommand.add_argument(
-		"-p",
-		"--project",
-		type=str,
-		help="Crowdin project name",
-		default="nvda",
-		choices=list(projectIds.keys()),
 	)
 	uploadSourceFileCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 	exportTranslationsCommand = commands.add_parser(
@@ -1008,21 +976,9 @@ def main():
 		help="Language code to export (e.g., 'es', 'fr', 'de'). If not specified, exports all languages.",
 		default=None,
 	)
-	exportTranslationsCommand.add_argument(
-		"-p",
-		"--project",
-		type=str,
-		help="Crowdin project name",
-		default="nvda",
-		choices=list(projectIds.keys()),
-	)
 	exportTranslationsCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 
 	args = args.parse_args()
-	global crowdinProjectId
-	crowdinProjectId = projectIds.get(args.project)
-	if args.id is not None:
-		crowdinProjectId = args.id
 	match args.command:
 		case "xliff2md":
 			markdownTranslate.generateMarkdown(
