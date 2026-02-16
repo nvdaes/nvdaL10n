@@ -1,5 +1,5 @@
 [project.scripts]
-l10nutil = "l10nUtil:main"
+l10nutil = "source.l10nUtil:main"
 [build-system]
 requires = ["setuptools~=80.9", "wheel"]
 build-backend = "setuptools.build_meta"
