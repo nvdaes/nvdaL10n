@@ -916,6 +916,10 @@ def main():
 	)
 	command_xliff2html.add_argument("xliffPath", help="Path to the xliff file")
 	command_xliff2html.add_argument("htmlPath", help="Path to the resulting html file")
+	downloadTranslationFileCommand = commands.add_parser(
+		"downloadTranslationFile",
+		help="Download a translation file from Crowdin.",
+	)
 	downloadTranslationFileCommand.add_argument(
 		"crowdinFilePath",
 		help="The Crowdin file path",
