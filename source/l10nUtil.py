@@ -980,6 +980,17 @@ def main():
 
 	args = args.parse_args()
 	match args.command:
+		case "checkPo":
+			badFilePaths = []
+			for poFilePath in args.poFilePaths:
+				ok, report = checkPo(poFilePath)
+				if report:
+					print(report)
+				if not ok:
+					badFilePaths.append(poFilePath)
+			if badFilePaths:
+				print(f"\nOne or more po files had fatal errors: {', '.join(badFilePaths)}")
+				sys.exit(1)
 		case "xliff2md":
 			markdownTranslate.generateMarkdown(
 				xliffPath=args.xliffPath,
@@ -1021,13 +1032,16 @@ def main():
 				os.remove(temp_mdFile.name)
 		case "downloadTranslationFile":
 			localFilePath = args.localFilePath or args.crowdinFilePath
-			downloadTranslationFile(args.crowdinFilePath, localFilePath, args.language)
-		case "xliff2md":
-			markdownTranslate.generateMarkdown(
-				xliffPath=args.xliffPath,
-				outputPath=args.mdPath,
-				translated=not args.untranslated,
-			)
+			language = getattr(args, "language", None) or "en"
+			downloadTranslationFile(args.crowdinFilePath, localFilePath, language)
+			if args.crowdinFilePath.endswith(".xliff"):
+				preprocessXliff(localFilePath, localFilePath)
+			elif localFilePath.endswith(".po"):
+				ok, report = checkPo(localFilePath)
+				if report:
+					print(report)
+				if not ok:
+					print(f"\nWarning: Po file {localFilePath} has fatal errors.")
 		case "uploadSourceFile":
 			if not args.localFilePath:
 				raise ValueError("You must specify localFilePath for uploadSourceFile")
@@ -1036,7 +1050,25 @@ def main():
 			exportTranslations(args.output, args.language)
 		case "uploadTranslationFile":
 			localFilePath = args.localFilePath or args.crowdinFilePath
+			needsDelete = False
+			if args.crowdinFilePath.endswith(".xliff"):
+				tmp = tempfile.NamedTemporaryFile(suffix=".xliff", delete=False, mode="w")
+				tmp.close()
+				import shutil
+				shutil.copyfile(localFilePath, tmp.name)
+				stripXliff(tmp.name, tmp.name, args.old)
+				localFilePath = tmp.name
+				needsDelete = True
+			elif localFilePath.endswith(".po"):
+				ok, report = checkPo(localFilePath)
+				if report:
+					print(report)
+				if not ok:
+					print(f"\nPo file {localFilePath} has errors. Upload aborted.")
+					sys.exit(1)
 			uploadTranslationFile(args.crowdinFilePath, localFilePath, args.language)
+			if needsDelete:
+				os.remove(localFilePath)
 		case _:
 			raise ValueError(f"Unknown command {args.command}")
 
