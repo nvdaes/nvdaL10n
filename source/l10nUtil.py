@@ -8,6 +8,7 @@ import lxml.etree
 import os
 import argparse
 import markdownTranslate
+import md2html
 import requests
 import codecs
 import re
