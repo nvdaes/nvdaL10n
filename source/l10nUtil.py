@@ -865,8 +865,24 @@ def main():
 		help="Paths to the po file to check",
 		nargs="+",
 	)
+	command_xliff2md = commands.add_parser("xliff2md", help="Convert xliff to markdown")
+	command_xliff2md.add_argument(
+		"-u",
+		"--untranslated",
+		help="Produce the untranslated markdown file",
+		action="store_true",
+		default=False,
+	)
+	command_xliff2md.add_argument("xliffPath", help="Path to the xliff file")
+	command_xliff2md.add_argument("mdPath", help="Path to the resulting markdown file")
 	command_md2html = commands.add_parser("md2html", help="Convert markdown to html")
-	command_md2html.add_argument("-l", "--lang", help="Language code", action="store", default="en")
+	command_md2html.add_argument(
+		"-l",
+		"--lang",
+		help="Language code",
+		action="store",
+		default="en",
+	)
 	command_md2html.add_argument(
 		"-t",
 		"--docType",
@@ -877,7 +893,13 @@ def main():
 	command_md2html.add_argument("mdPath", help="Path to the markdown file")
 	command_md2html.add_argument("htmlPath", help="Path to the resulting html file")
 	command_xliff2html = commands.add_parser("xliff2html", help="Convert xliff to html")
-	command_xliff2html.add_argument("-l", "--lang", help="Language code", action="store", required=False)
+	command_xliff2html.add_argument(
+		"-l",
+		"--lang",
+		help="Language code",
+		action="store",
+		required=False,
+	)
 	command_xliff2html.add_argument(
 		"-t",
 		"--docType",
@@ -894,24 +916,6 @@ def main():
 	)
 	command_xliff2html.add_argument("xliffPath", help="Path to the xliff file")
 	command_xliff2html.add_argument("htmlPath", help="Path to the resulting html file")
-	command_xliff2md = commands.add_parser("xliff2md", help="Convert xliff to markdown")
-	command_xliff2md.add_argument(
-		"-u",
-		"--untranslated",
-		help="Produce the untranslated markdown file",
-		action="store_true",
-		default=False,
-	)
-	command_xliff2md.add_argument("xliffPath", help="Path to the xliff file")
-	command_xliff2md.add_argument("mdPath", help="Path to the resulting markdown file")
-	downloadTranslationFileCommand = commands.add_parser(
-		"downloadTranslationFile",
-		help="Download a translation file from Crowdin.",
-	)
-	downloadTranslationFileCommand.add_argument(
-		"language",
-		help="The language code to download the translation for.",
-	)
 	downloadTranslationFileCommand.add_argument(
 		"crowdinFilePath",
 		help="The Crowdin file path",
