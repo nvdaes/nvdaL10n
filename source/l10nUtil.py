@@ -16,6 +16,7 @@ import subprocess
 import sys
 import zipfile
 import time
+import tempfile
 import json
 
 
@@ -1023,6 +1024,45 @@ def main():
 	if args.id is not None:
 		crowdinProjectId = args.id
 	match args.command:
+		case "xliff2md":
+			markdownTranslate.generateMarkdown(
+				xliffPath=args.xliffPath,
+				outputPath=args.mdPath,
+				translated=not args.untranslated,
+			)
+		case "md2html":
+			md2html.main(
+				source=args.mdPath,
+				dest=args.htmlPath,
+				lang=args.lang,
+				docType=args.docType,
+			)
+		case "xliff2html":
+			lang = args.lang or fetchLanguageFromXliff(
+				args.xliffPath,
+				source=args.untranslated,
+			)
+			temp_mdFile = tempfile.NamedTemporaryFile(
+				suffix=".md",
+				delete=False,
+				mode="w",
+				encoding="utf-8",
+			)
+			temp_mdFile.close()
+			try:
+				markdownTranslate.generateMarkdown(
+					xliffPath=args.xliffPath,
+					outputPath=temp_mdFile.name,
+					translated=not args.untranslated,
+				)
+				md2html.main(
+					source=temp_mdFile.name,
+					dest=args.htmlPath,
+					lang=lang,
+					docType=args.docType,
+				)
+			finally:
+				os.remove(temp_mdFile.name)
 		case "downloadTranslationFile":
 			localFilePath = args.localFilePath or args.crowdinFilePath
 			downloadTranslationFile(args.crowdinFilePath, localFilePath, args.language)
