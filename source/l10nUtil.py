@@ -318,7 +318,7 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 					title = f"{ext[0]} documentation"
 					exportPattern = f"/{ext[0]}/%two_letters_code%/{filename}"
 				exportOptions = {"exportPattern": exportPattern}
-				print(f"Exporting source file {localFilePath} from storage with ID {storageId}")
+				print(f"Adding source file {localFilePath} to Crowdin with storage ID {storageId}")
 				res = client.source_files.add_file(
 					storageId=storageId,
 					projectId=crowdinProjectId,
