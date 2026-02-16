@@ -274,9 +274,10 @@ def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: 
 		raise ValueError("Crowdin export failed or invalid response")
 	download_url = res["data"]["url"]
 	print(f"Downloading from {download_url}")
-	# Ensure the local directory exists
+	# Ensure the local directory exists (if a directory component is present)
 	dirname = os.path.dirname(localFilePath)
-	os.makedirs(dirname, exist_ok=True)
+	if dirname:
+		os.makedirs(dirname, exist_ok=True)
 	try:
 		r = requests.get(download_url, timeout=60)
 		r.raise_for_status()
