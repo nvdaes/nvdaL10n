@@ -7,6 +7,7 @@ import crowdin_api as crowdin
 import tempfile
 import lxml.etree
 import os
+import shutil
 import argparse
 import markdownTranslate
 import md2html
