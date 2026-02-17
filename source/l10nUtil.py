@@ -351,9 +351,8 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 	:param localFilePath: The path to the local file to be uploaded
 	:param language: The language code to upload the translation for
 	"""
-	# Use the basename for lookup, as in downloadTranslationFile
-	basename = os.path.basename(crowdinFilePath)
-	files = getFiles(filter=basename)
+	filename = os.path.basename(crowdinFilePath)
+	files = getFiles(filter=filename)
 	fileId = files.get(crowdinFilePath)
 	if fileId is None:
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
@@ -875,6 +874,10 @@ def main():
 	downloadTranslationFileCommand = commands.add_parser(
 		"downloadTranslationFile",
 		help="Download a translation file from Crowdin.",
+	)
+	downloadTranslationFileCommand.add_argument(
+		"language",
+		help="The language code to download the translation for.",
 	)
 	downloadTranslationFileCommand.add_argument(
 		"crowdinFilePath",
