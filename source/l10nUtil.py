@@ -238,9 +238,6 @@ def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: 
 	files = getFiles(filter=filename)
 	fileId = files.get(crowdinFilePath)
 	if fileId is None:
-		files = getFiles(filter=filename, refresh=True)
-	fileId = files.get(crowdinFilePath)
-	if fileId is None:
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
 	print(f"Requesting export of {crowdinFilePath} for {language} from Crowdin")
 	client = getCrowdinClient()
@@ -278,8 +275,6 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 		raise ValueError("localFilePath must not be None")
 	filename = os.path.basename(localFilePath)
 	files = getFiles(filter=filename)
-	if files.get(filename) is None:
-		files = getFiles(filter=filename, refresh=True)
 	client = getCrowdinClient()
 	try:
 		with open(localFilePath, "rb") as f:
@@ -360,9 +355,6 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 	basename = os.path.basename(crowdinFilePath)
 	files = getFiles(filter=basename)
 	fileId = files.get(crowdinFilePath)
-	if fileId is None:
-		files = getFiles(filter=basename, refresh=True)
-		fileId = files.get(crowdinFilePath)
 	if fileId is None:
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
 	print(f"Uploading {localFilePath} to Crowdin")
