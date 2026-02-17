@@ -1027,6 +1027,8 @@ def main():
 			if args.crowdinFilePath.endswith(".xliff"):
 				tmp = tempfile.NamedTemporaryFile(suffix=".xliff", delete=False, mode="w")
 				tmp.close()
+				shutil.copyfile(localFilePath, tmp.name)
+
 				stripXliff(tmp.name, tmp.name, args.old)
 				localFilePath = tmp.name
 				needsDelete = True
