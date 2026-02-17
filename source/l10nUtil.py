@@ -18,7 +18,6 @@ import subprocess
 import sys
 import zipfile
 import time
-import json
 
 POLLING_INTERVAL_SECONDS = 5
 EXPORT_TIMEOUT_SECONDS = 60 * 10  # 10 minutes
