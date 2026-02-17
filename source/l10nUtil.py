@@ -63,19 +63,6 @@ def getCrowdinClient() -> crowdin.CrowdinClient:
 	return _crowdinClient
 
 
-def getL10nFile(directory: str | None = None) -> str:
-	"""
-	Get the file path containing file IDs for the given project ID.
-	:param directory: The directory to store the file in. If None, use the home directory.
-	:return: The file path containing file IDs.
-	"""
-
-	if directory is None:
-		directory = os.path.expanduser("~")
-	os.makedirs(directory, exist_ok=True)
-	return os.path.join(directory, f"l10n_{str(crowdinProjectId)}.json")
-
-
 def fetchLanguageFromXliff(xliffPath: str, source: bool = False) -> str:
 	"""
 	Fetch the language from an xliff file.
