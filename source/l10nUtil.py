@@ -49,7 +49,7 @@ def fetchCrowdinAuthToken() -> str:
 
 
 _crowdinClient = None
-_crowdinProjectId = None
+_crowdinProjectId = 598017
 
 
 def getCrowdinClient() -> crowdin.CrowdinClient:
@@ -306,7 +306,7 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 				print(f"Adding source file {localFilePath} to Crowdin with storage ID {storageId}")
 				res = client.source_files.add_file(
 					storageId=storageId,
-					projectId=crowdinProjectId,
+					projectId=_crowdinProjectId,
 					name=filename,
 					title=title,
 					exportOptions=exportOptions,
@@ -318,7 +318,7 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 				res = client.source_files.update_file(
 					fileId=fileId,
 					storageId=storageId,
-					projectId=crowdinProjectId,
+					projectId=_crowdinProjectId,
 				)
 				if res is None:
 					raise ValueError("Crowdin update_file failed")
@@ -327,42 +327,25 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 		raise RuntimeError(f"Failed to add or update file in Crowdin: {e}")
 
 
-def getFiles(filter: str | None = None, refresh: bool = False) -> dict[str, int]:
+def getFiles(filter: str | None = None) -> dict[str, int]:
 	"""
-	Gets files from Crowdin, and writes them to a json file for caching.
+	Gets files from Crowdin.
 	:param filter: Expression to filter the list of files.
-	:param refresh: If True, refresh the files from Crowdin instead of using the cached file.
 	:return: A dictionary mapping file names to their IDs.
 	"""
 
-	l10nFile = getL10nFile()
 	dictionary: dict[str, int] = {}
-	try:
-		with open(l10nFile, "r", encoding="utf-8") as jsonFile:
-			dictionary = json.load(jsonFile)
-			if not refresh:  # Avoid repeating the print if refreshing
-				print(f"Loaded {len(dictionary)} files from cache: {l10nFile}")
-	except (OSError, json.JSONDecodeError) as e:
-		print(f"Cache file {l10nFile} is missing or corrupted: {e}. Refreshing from Crowdin.")
-		refresh = True
-	if refresh:
-		print(f"Fetching files from Crowdin (projectId: {crowdinProjectId})...")
-		client = getCrowdinClient()
-		res = client.source_files.list_files(crowdinProjectId, filter=filter)
-		if res is None:
-			raise ValueError("Crowdin list_files failed")
-		data = res["data"]
-		for file in data:
-			fileInfo = file["data"]
-			name = fileInfo["name"]
-			file_id = fileInfo["id"]
-			dictionary.update({name: file_id})
-		try:
-			with open(l10nFile, "w", encoding="utf-8") as jsonFile:
-				json.dump(dictionary, jsonFile, ensure_ascii=False, indent="\t")
-			print(f"Cached {len(dictionary)} files to {l10nFile}")
-		except Exception as e:
-			print(f"Failed to write cache file {l10nFile}: {e}")
+	print(f"Fetching files from Crowdin (projectId: {_crowdinProjectId})...")
+	client = getCrowdinClient()
+	res = client.source_files.list_files(_crowdinProjectId, filter=filter)
+	if res is None:
+		raise ValueError("Crowdin list_files failed")
+	data = res["data"]
+	for file in data:
+		fileInfo = file["data"]
+		name = fileInfo["name"]
+		file_id = fileInfo["id"]
+		dictionary.update({name: file_id})
 	return dictionary
 
 
@@ -967,6 +950,8 @@ def main():
 	exportTranslationsCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 
 	args = args.parse_args()
+	global _crowdinProjectId
+	_crowdinProjectId = args.id or _crowdinProjectId
 	match args.command:
 		case "checkPo":
 			badFilePaths = []
@@ -1043,6 +1028,7 @@ def main():
 				tmp = tempfile.NamedTemporaryFile(suffix=".xliff", delete=False, mode="w")
 				tmp.close()
 				import shutil
+
 				shutil.copyfile(localFilePath, tmp.name)
 				stripXliff(tmp.name, tmp.name, args.old)
 				localFilePath = tmp.name
