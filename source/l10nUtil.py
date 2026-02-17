@@ -49,6 +49,7 @@ def fetchCrowdinAuthToken() -> str:
 
 
 _crowdinClient = None
+_crowdinProjectId = None
 
 
 def getCrowdinClient() -> crowdin.CrowdinClient:
@@ -59,7 +60,7 @@ def getCrowdinClient() -> crowdin.CrowdinClient:
 	global _crowdinClient
 	if _crowdinClient is None:
 		token = fetchCrowdinAuthToken()
-		_crowdinClient = crowdin.CrowdinClient(token=token, project_id=crowdinProjectId)
+		_crowdinClient = crowdin.CrowdinClient(token=token, project_id=_crowdinProjectId)
 	return _crowdinClient
 
 
