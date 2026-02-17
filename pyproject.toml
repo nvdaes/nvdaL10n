@@ -32,6 +32,12 @@ dependencies = [
 [project.urls]
 Repository = "https://github.com/nvdaes/nvdaL10n"
 
+[project.optional-dependencies]
+windows-packaging = [
+	"py2exe==0.11.1.0",
+	"pyinstaller==6.3.0",
+]
+
 [tool.ruff]
 line-length = 110
 
