@@ -339,7 +339,7 @@ def getFiles(filter: str | None = None) -> dict[str, int]:
 	for file in data:
 		fileInfo = file["data"]
 		name = fileInfo["name"]
-		file_id = fileInfo["id"]
+		fileId = fileInfo["id"]
 		dictionary.update({name: file_id})
 	return dictionary
 
