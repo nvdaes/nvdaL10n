@@ -48,8 +48,15 @@ def fetchCrowdinAuthToken() -> str:
 	return token
 
 
-_crowdinClient = None
-_crowdinProjectId = 598017
+
+from dataclasses import dataclass
+
+@dataclass
+class CrowdinContext:
+	client: crowdin.CrowdinClient | None = None
+	projectId: int = 0
+
+_crowdinContext = CrowdinContext()
 
 
 def getCrowdinClient() -> crowdin.CrowdinClient:
@@ -57,11 +64,10 @@ def getCrowdinClient() -> crowdin.CrowdinClient:
 	Create or fetch the Crowdin client instance.
 	:return: The Crowdin client
 	"""
-	global _crowdinClient
-	if _crowdinClient is None:
+	if _crowdinContext.client is None:
 		token = fetchCrowdinAuthToken()
-		_crowdinClient = crowdin.CrowdinClient(token=token, project_id=_crowdinProjectId)
-	return _crowdinClient
+		_crowdinContext.client = crowdin.CrowdinClient(token=token, project_id=_crowdinContext.projectId)
+	return _crowdinContext.client
 
 
 def fetchLanguageFromXliff(xliffPath: str, source: bool = False) -> str:
@@ -301,7 +307,7 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 				print(f"Adding source file {localFilePath} to Crowdin with storage ID {storageId}")
 				res = client.source_files.add_file(
 					storageId=storageId,
-					projectId=_crowdinProjectId,
+					projectId=_crowdinContext.projectId,
 					name=filename,
 					title=title,
 					exportOptions=exportOptions,
@@ -313,7 +319,7 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 				res = client.source_files.update_file(
 					fileId=fileId,
 					storageId=storageId,
-					projectId=_crowdinProjectId,
+					projectId=_crowdinContext.projectId,
 				)
 				if res is None:
 					raise ValueError("Crowdin update_file failed")
@@ -330,9 +336,9 @@ def getFiles(filter: str | None = None) -> dict[str, int]:
 	"""
 
 	dictionary: dict[str, int] = {}
-	print(f"Fetching files from Crowdin (projectId: {_crowdinProjectId})...")
+	print(f"Fetching files from Crowdin (projectId: {_crowdinContext.projectId})...")
 	client = getCrowdinClient()
-	res = client.source_files.list_files(_crowdinProjectId, filter=filter)
+	res = client.source_files.list_files(_crowdinContext.projectId, filter=filter)
 	if res is None:
 		raise ValueError("Crowdin list_files failed")
 	data = res["data"]
@@ -340,7 +346,7 @@ def getFiles(filter: str | None = None) -> dict[str, int]:
 		fileInfo = file["data"]
 		name = fileInfo["name"]
 		fileId = fileInfo["id"]
-		dictionary.update({name: file_id})
+		dictionary.update({name: fileId})
 	return dictionary
 
 
@@ -945,8 +951,7 @@ def main():
 	exportTranslationsCommand.add_argument("-i", "--id", help="Crowdin project ID", type=int, default=None)
 
 	args = args.parse_args()
-	global _crowdinProjectId
-	_crowdinProjectId = args.id or _crowdinProjectId
+	_crowdinContext.projectId = args.id or _crowdinContext.projectId
 	match args.command:
 		case "xliff2md":
 			markdownTranslate.generateMarkdown(
