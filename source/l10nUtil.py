@@ -18,6 +18,7 @@ import subprocess
 import sys
 import zipfile
 import time
+from dataclasses import dataclass
 
 POLLING_INTERVAL_SECONDS = 5
 EXPORT_TIMEOUT_SECONDS = 60 * 10  # 10 minutes
@@ -47,9 +48,6 @@ def fetchCrowdinAuthToken() -> str:
 		f.write(token)
 	return token
 
-
-
-from dataclasses import dataclass
 
 @dataclass
 class CrowdinContext:
