@@ -54,6 +54,7 @@ def fetchCrowdinAuthToken() -> str:
 class CrowdinContext:
 	client: crowdin.CrowdinClient | None = None
 	projectId: int = 0
+	files: dict[str, int] | None = None
 	configFile: str | None = None
 
 _crowdinContext = CrowdinContext()
@@ -347,7 +348,8 @@ def getFiles(filter: str | None = None) -> dict[str, int]:
 		name = fileInfo["name"]
 		fileId = fileInfo["id"]
 		dictionary.update({name: fileId})
-	return dictionary
+	_crowdinContext.files = dictionary
+	return _crowdinContext.files
 
 
 def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: str):
@@ -474,6 +476,30 @@ def exportTranslations(outputDir: str, language: str | None = None):
 		print(f"\nExport complete! All translations extracted to '{outputDir}' directory.")
 	else:
 		print(f"\nExport complete! All {language} translations extracted to '{outputDir}' directory.")
+
+
+def loadConfig(configFile: str) -> None:
+	"""
+	Load the configuration from a YAML file.
+	:param configFile: The path to the YAML configuration file.
+	"""
+	with open(configFile, "r") as f:
+		config = yaml.safe_load(f)
+	_crowdinContext.projectId = config.get("projectId", 0)
+	_crowdinContext.configFile = configFile
+	_crowdinContext.files = config.get("files", {})
+
+def writeConfig(configFile: str) -> None:
+	"""
+	Write the current configuration to a YAML file.
+	:param configFile: The path to the YAML configuration file. If None, uses the path from the current context.
+	"""
+	config = {
+		"projectId": _crowdinContext.projectId,
+		"files": _crowdinContext.files,
+	}
+	with open(configFile, "w") as f:
+		yaml.safe_dump(config, f)
 
 
 class _PoChecker:
