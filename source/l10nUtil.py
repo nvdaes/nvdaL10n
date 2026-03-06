@@ -1,4 +1,5 @@
 # A part of NonVisual Desktop Access (NVDA)
+	
 # Copyright (C) 2024-2026 NV Access Limited, Noelia Ruiz Martínez
 # This file is covered by the GNU General Public License.
 # See the file COPYING for more details.
@@ -495,14 +496,21 @@ def loadConfig(configFile: str) -> None:
 	_crowdinContext.configFile = configFile
 	_crowdinContext.files = config.get("files", {})
 
-def writeConfig(configFile: str) -> None:
+def writeConfig(configFile: str | None, projectId: int | None, filterFiles: str | None) -> None:
 	"""
 	Write the current configuration to a YAML file.
 	:param configFile: The path to the YAML configuration file. If None, uses the path from the current context.
+	:param projectId: The Crowdin project ID to save. If None, uses the project ID from the current context.
+	:param filterFiles: A string to filter files in Crowdin. If None, the list of files will not be filtered when fetched, and all files will be saved in the configuration.
 	"""
 	config = asdict(_crowdinContext)
-	with open(configFile, "w") as f:
-		yaml.safe_dump(config, f)
+	if configFile is not None:
+		config["configFile"] = configFile
+	if projectId is not None:
+		config["projectId"] = projectId
+	config["files"] = getFiles(filter=filterFiles)
+	with open(config["configFile"], "w") as f:
+							yaml.safe_dump(config, f)
 
 
 class _PoChecker:
@@ -992,6 +1000,22 @@ def main():
 	exportTranslationsCommand.add_argument(
 		"-c", "--config", help="Path to the configuration file", default=None
 	)
+	writeConfigCommand = commands.add_parser(
+		"writeConfig",
+		help="Write the current configuration to a YAML file. This includes the project ID and the list of files in Crowdin (optionally filtered).",
+	)
+	writeConfigCommand.add_argument(
+		"configFile",
+		help="The path to the YAML configuration file to write. If not provided, uses the path from the current context or 'l10nConfig.yaml' if not set.",
+		nargs="?",
+		default=None,
+	)
+	writeConfigCommand.add_argument(
+		"-i", "--id", help="Crowdin project ID", type=int, default=None
+	)
+	writeConfigCommand.add_argument(
+		"-f", "--filter", help="Filter files to include in the configuration", default=None
+	)
 	args = args.parse_args()
 	if args.config:
 		loadConfig(args.config)
@@ -1091,6 +1115,8 @@ def main():
 			if not args.localFilePath:
 				raise ValueError("You must specify localFilePath for uploadSourceFile")
 			uploadSourceFile(args.localFilePath)
+		case "writeConfig":
+			writeConfig(args.configFile, args.id, args.filter)
 		case _:
 			raise ValueError(f"Unknown command {args.command}")
 
