@@ -1,0 +1,26 @@
+name: Build executable
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  build:
+    runs-on: windoes-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: "Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+      - name: Build executable
+        run: uv run pyinstaller --onefile source/l10nUtil.py
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: l10nUtil
+          path: dist/l10nUtil.exe
+
