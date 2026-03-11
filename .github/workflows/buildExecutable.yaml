@@ -6,7 +6,7 @@ on:
     branches: [main]
 jobs:
   build:
-    runs-on: windoes-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -15,9 +15,11 @@ jobs:
         with:
           python-version-file: ".python-version"
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
       - name: Build executable
-        run: uv run pyinstaller --onefile source/l10nUtil.py
+        run: |
+          uv pip install .
+          uv run pyinstaller --onefile source/l10nUtil.py
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
