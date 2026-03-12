@@ -510,7 +510,7 @@ def writeConfig(configFile: str | None, projectId: int | None, filterFiles: str 
 		config["projectId"] = projectId
 	config["files"] = getFiles(filter=filterFiles)
 	with open(config["configFile"], "w") as f:
-							yaml.safe_dump(config, f)
+		yaml.safe_dump(config, f)
 
 
 class _PoChecker:
