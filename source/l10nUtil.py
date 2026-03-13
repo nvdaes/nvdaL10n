@@ -517,7 +517,10 @@ def writeConfig(configFile: str | None, projectId: int | None, filterFiles: str 
 	if projectId is not None:
 		_crowdinContext.projectId = projectId
 	fetched = getFiles(filter=filterFiles)
-	_crowdinContext.files = {**_crowdinContext.files, **fetched}
+	if filterFiles is not None:
+		_crowdinContext.files = fetched
+	else:
+		_crowdinContext.files = {**_crowdinContext.files, **fetched}
 	config = {
 		"projectId": _crowdinContext.projectId,
 		"files": _crowdinContext.files,
