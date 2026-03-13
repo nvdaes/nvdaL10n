@@ -246,7 +246,7 @@ def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: 
 	filename = os.path.basename(crowdinFilePath)
 	files = _crowdinContext.files
 	if filename not in files:
-		_crowdinContext.files = {**files, **getFiles(filter=filename)}
+		_crowdinContext.files = {**getFiles()}
 		files = _crowdinContext.files
 	fileId = files.get(crowdinFilePath)
 	if fileId is None:
@@ -288,7 +288,7 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 	filename = os.path.basename(localFilePath)
 	files = _crowdinContext.files
 	if filename not in files:
-		_crowdinContext.files = {**files, **getFiles(filter=filename)}
+		_crowdinContext.files = {**getFiles()}
 		files = _crowdinContext.files
 	client = getCrowdinClient()
 	try:
@@ -337,17 +337,16 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 		raise RuntimeError(f"Failed to add or update file in Crowdin: {e}")
 
 
-def getFiles(filter: str | None = None) -> dict[str, int]:
+def getFiles() -> dict[str, int]:
 	"""
 	Gets files from Crowdin.
-	:param filter: Expression to filter the list of files.
 	:return: A dictionary mapping file names to their IDs.
 	"""
 
 	dictionary: dict[str, int] = {}
 	print(f"Fetching files from Crowdin (projectId: {_crowdinContext.projectId})...")
 	client = getCrowdinClient()
-	res = client.source_files.with_fetch_all().list_files(_crowdinContext.projectId, filter=filter)
+	res = client.source_files.with_fetch_all().list_files(_crowdinContext.projectId)
 	if res is None or "data" not in res:
 		raise ValueError("Crowdin list_files failed")
 	for file in res["data"]:
@@ -368,7 +367,7 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 	filename = os.path.basename(localFilePath)
 	files = _crowdinContext.files
 	if filename not in files:
-		_crowdinContext.files = {**files, **getFiles(filter=filename)}
+		_crowdinContext.files = {**getFiles()}
 		files = _crowdinContext.files
 	fileId = files.get(crowdinFilePath)
 	if fileId is None:
@@ -500,27 +499,18 @@ def loadConfig(configFile: str) -> None:
 	_crowdinContext.files = config.get("files", {})
 
 
-def writeConfig(configFile: str | None, projectId: int | None, filterFiles: str | None) -> None:
+def writeConfig(configFile: str | None, projectId: int | None) -> None:
 	"""
 	Write the current configuration to a YAML file.
 	:param configFile: The path to the YAML configuration file. If None, defaults to DEFAULT_CONFIG_FILE.
 	:param projectId: The Crowdin project ID to save. If None, uses the project ID from the current context.
-	:param filterFiles: A string to filter files in Crowdin. If None, the list of files will not be filtered when fetched, and all files will be saved in the configuration.
 	"""
 	if configFile is None:
 		configFile = DEFAULT_CONFIG_FILE
-	if os.path.exists(configFile):
-		try:
-			loadConfig(configFile)
-		except Exception as e:
-			raise RuntimeError(f"Failed to load existing config from {configFile}: {e}")
 	if projectId is not None:
 		_crowdinContext.projectId = projectId
-	fetched = getFiles(filter=filterFiles)
-	if filterFiles is not None:
-		_crowdinContext.files = fetched
-	else:
-		_crowdinContext.files = {**_crowdinContext.files, **fetched}
+	files = getFiles()
+	_crowdinContext.files = files
 	config = {
 		"projectId": _crowdinContext.projectId,
 		"files": _crowdinContext.files,
@@ -1024,13 +1014,10 @@ def main():
 		help="Write the current configuration to a YAML file. This includes the project ID and the list of files in Crowdin (optionally filtered).",
 	)
 	writeConfigCommand.add_argument(
-		"-c", "--config", help="The path to the YAML configuration file to write. If not provided, uses the path from the current context or 'l10nConfig.yaml' if not set.", default=None
+		"-c", "--config", help="The path to the YAML configuration file to write. If not provided, uses the default path 'l10nConfig.yaml'.", default=None
 	)
 	writeConfigCommand.add_argument(
 		"-i", "--id", help="Crowdin project ID", type=int, default=None
-	)
-	writeConfigCommand.add_argument(
-		"-f", "--filter", help="Filter files to include in the configuration", default=None
 	)
 	args = args.parse_args()
 	if getattr(args, 'config', None):
@@ -1132,7 +1119,7 @@ def main():
 				raise ValueError("You must specify localFilePath for uploadSourceFile")
 			uploadSourceFile(args.localFilePath)
 		case "writeConfig":
-			writeConfig(args.config, args.id, args.filter)
+			writeConfig(args.config, args.id)
 		case _:
 			raise ValueError(f"Unknown command {args.command}")
 
