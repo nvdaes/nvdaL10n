@@ -1020,9 +1020,10 @@ def main():
 		"-i", "--id", help="Crowdin project ID", type=int, default=None
 	)
 	args = args.parse_args()
-	if getattr(args, 'config', None):
+	if getattr(args, 'config', None) is not None:
 		loadConfig(args.config)
-	_crowdinContext.projectId = getattr(args, 'id', None) or _crowdinContext.projectId
+	if getattr(args, 'id', None) is not None:
+		_crowdinContext.projectId = args.id
 	match args.command:
 		case "xliff2md":
 			markdownTranslate.generateMarkdown(
