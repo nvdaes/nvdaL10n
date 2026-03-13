@@ -4,6 +4,7 @@
 # This file is covered by the GNU General Public License.
 # See the file COPYING for more details.
 
+
 import crowdin_api as crowdin
 import tempfile
 import lxml.etree
@@ -20,10 +21,11 @@ import sys
 import zipfile
 import time
 import yaml
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, field
 
 POLLING_INTERVAL_SECONDS = 5
 EXPORT_TIMEOUT_SECONDS = 60 * 10  # 10 minutes
+DEFAULT_CONFIG_FILE = "l10nConfig.yaml"
 
 
 def fetchCrowdinAuthToken() -> str:
@@ -53,10 +55,9 @@ def fetchCrowdinAuthToken() -> str:
 
 @dataclass
 class CrowdinContext:
-	client: crowdin.CrowdinClient | None = None
-	projectId: int = 0
-	files: dict[str, int] | None = None
-	configFile: str | None = None
+	_client: crowdin.CrowdinClient | None = None
+	projectId: int | None = None
+	files: dict[str, int] = field(default_factory=dict)
 
 _crowdinContext = CrowdinContext()
 
@@ -66,10 +67,10 @@ def getCrowdinClient() -> crowdin.CrowdinClient:
 	Create or fetch the Crowdin client instance.
 	:return: The Crowdin client
 	"""
-	if _crowdinContext.client is None:
+	if _crowdinContext._client is None:
 		token = fetchCrowdinAuthToken()
-		_crowdinContext.client = crowdin.CrowdinClient(token=token, project_id=_crowdinContext.projectId)
-	return _crowdinContext.client
+		_crowdinContext._client = crowdin.CrowdinClient(token=token, project_id=_crowdinContext.projectId)
+	return _crowdinContext._client
 
 
 def fetchLanguageFromXliff(xliffPath: str, source: bool = False) -> str:
@@ -243,9 +244,10 @@ def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: 
 	:param language: The language code to download the translation for
 	"""
 	filename = os.path.basename(crowdinFilePath)
-	files = _crowdinContext.files if _crowdinContext.files is not None else {}
+	files = _crowdinContext.files
 	if filename not in files:
-		files = getFiles(filter=filename)
+		_crowdinContext.files = {**files, **getFiles(filter=filename)}
+		files = _crowdinContext.files
 	fileId = files.get(crowdinFilePath)
 	if fileId is None:
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
@@ -284,9 +286,10 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 	if localFilePath is None:
 		raise ValueError("localFilePath must not be None")
 	filename = os.path.basename(localFilePath)
-	files = _crowdinContext.files if _crowdinContext.files is not None else {}
+	files = _crowdinContext.files
 	if filename not in files:
-		files = getFiles(filter=filename)
+		_crowdinContext.files = {**files, **getFiles(filter=filename)}
+		files = _crowdinContext.files
 	client = getCrowdinClient()
 	try:
 		with open(localFilePath, "rb") as f:
@@ -344,17 +347,15 @@ def getFiles(filter: str | None = None) -> dict[str, int]:
 	dictionary: dict[str, int] = {}
 	print(f"Fetching files from Crowdin (projectId: {_crowdinContext.projectId})...")
 	client = getCrowdinClient()
-	res = client.source_files.list_files(_crowdinContext.projectId, filter=filter)
-	if res is None:
+	res = client.source_files.with_fetch_all().list_files(_crowdinContext.projectId, filter=filter)
+	if res is None or "data" not in res:
 		raise ValueError("Crowdin list_files failed")
-	data = res["data"]
-	for file in data:
+	for file in res["data"]:
 		fileInfo = file["data"]
 		name = fileInfo["name"]
 		fileId = fileInfo["id"]
-		dictionary.update({name: fileId})
-	_crowdinContext.files = dictionary
-	return _crowdinContext.files
+		dictionary[name] = fileId
+	return dictionary
 
 
 def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: str):
@@ -365,9 +366,10 @@ def uploadTranslationFile(crowdinFilePath: str, localFilePath: str, language: st
 	:param language: The language code to upload the translation for
 	"""
 	filename = os.path.basename(localFilePath)
-	files = _crowdinContext.files if _crowdinContext.files is not None else {}
+	files = _crowdinContext.files
 	if filename not in files:
-		files = getFiles(filter=filename)
+		_crowdinContext.files = {**files, **getFiles(filter=filename)}
+		files = _crowdinContext.files
 	fileId = files.get(crowdinFilePath)
 	if fileId is None:
 		raise ValueError(f"File not found in Crowdin: {crowdinFilePath}")
@@ -490,28 +492,41 @@ def loadConfig(configFile: str) -> None:
 	Load the configuration from a YAML file.
 	:param configFile: The path to the YAML configuration file.
 	"""
+	if not os.path.exists(configFile):
+		raise FileNotFoundError(f"Configuration file not found: {configFile}")
 	with open(configFile, "r") as f:
 		config = yaml.safe_load(f)
-	_crowdinContext.projectId = config.get("projectId", 0)
-	_crowdinContext.configFile = configFile
+	_crowdinContext.projectId = config.get("projectId")
 	_crowdinContext.files = config.get("files", {})
+
 
 def writeConfig(configFile: str | None, projectId: int | None, filterFiles: str | None) -> None:
 	"""
 	Write the current configuration to a YAML file.
-	:param configFile: The path to the YAML configuration file. If None, uses the path from the current context.
+	:param configFile: The path to the YAML configuration file. If None, defaults to DEFAULT_CONFIG_FILE.
 	:param projectId: The Crowdin project ID to save. If None, uses the project ID from the current context.
 	:param filterFiles: A string to filter files in Crowdin. If None, the list of files will not be filtered when fetched, and all files will be saved in the configuration.
 	"""
-	config = asdict(_crowdinContext)
 	if configFile is None:
-		configFile = _crowdinContext.configFile or "l10nConfig.yaml"
-	config["configFile"] = configFile
+		configFile = DEFAULT_CONFIG_FILE
+	if os.path.exists(configFile):
+		try:
+			loadConfig(configFile)
+		except Exception as e:
+			raise RuntimeError(f"Failed to load existing config from {configFile}: {e}")
 	if projectId is not None:
-		config["projectId"] = projectId
-	config["files"] = getFiles(filter=filterFiles)
-	with open(configFile, "w") as f:
-		yaml.safe_dump(config, f)
+		_crowdinContext.projectId = projectId
+	fetched = getFiles(filter=filterFiles)
+	_crowdinContext.files = {**_crowdinContext.files, **fetched}
+	config = {
+		"projectId": _crowdinContext.projectId,
+		"files": _crowdinContext.files,
+	}
+	try:
+		with open(configFile, "w") as f:
+			yaml.safe_dump(config, f)
+	except OSError as e:
+		raise RuntimeError(f"Failed to write config to {configFile}: {e}")
 
 
 class _PoChecker:
@@ -1015,7 +1030,7 @@ def main():
 		"-f", "--filter", help="Filter files to include in the configuration", default=None
 	)
 	args = args.parse_args()
-	if getattr(args, 'config', None): 
+	if getattr(args, 'config', None):
 		loadConfig(args.config)
 	_crowdinContext.projectId = getattr(args, 'id', None) or _crowdinContext.projectId
 	match args.command:
