@@ -36,6 +36,8 @@ dependencies = [
 ]
 [project.urls]
 Repository = "https://github.com/nvaccess/nvdaL10n"
+]
+
 [tool.ruff]
 line-length = 110
 

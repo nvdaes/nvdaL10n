@@ -44,9 +44,9 @@ def prettyPathString(path: str) -> str:
 
 @contextlib.contextmanager
 def createAndDeleteTempFilePath_contextManager(
-	dir: str | None = None,
-	prefix: str | None = None,
-	suffix: str | None = None,
+    dir: str | None = None,
+    prefix: str | None = None,
+    suffix: str | None = None,
 ) -> Generator[str, None, None]:
 	"""A context manager that creates a temporary file and deletes it when the context is exited"""
 	with tempfile.NamedTemporaryFile(
@@ -62,85 +62,85 @@ def createAndDeleteTempFilePath_contextManager(
 
 
 def getLastCommitID(filePath: str) -> str:
-	# Run the git log command to get the last commit ID for the given file
-	result = subprocess.run(
-		["git", "log", "-n", "1", "--pretty=format:%H", "--", filePath],
-		capture_output=True,
-		text=True,
-		check=True,
-	)
-	commitID = result.stdout.strip()
-	if not re.match(r"[0-9a-f]{40}", commitID):
-		raise ValueError(f"Invalid commit ID: '{commitID}' for file '{filePath}'")
-	return commitID
+    # Run the git log command to get the last commit ID for the given file
+    result = subprocess.run(
+        ["git", "log", "-n", "1", "--pretty=format:%H", "--", filePath],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    commitID = result.stdout.strip()
+    if not re.match(r"[0-9a-f]{40}", commitID):
+        raise ValueError(f"Invalid commit ID: '{commitID}' for file '{filePath}'")
+    return commitID
 
 
 def getGitDir() -> str:
-	# Run the git rev-parse command to get the root of the git directory
-	result = subprocess.run(
-		["git", "rev-parse", "--show-toplevel"],
-		capture_output=True,
-		text=True,
-		check=True,
-	)
-	gitDir = result.stdout.strip()
-	if not os.path.isdir(gitDir):
-		raise ValueError(f"Invalid git directory: '{gitDir}'")
-	return gitDir
+    # Run the git rev-parse command to get the root of the git directory
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    gitDir = result.stdout.strip()
+    if not os.path.isdir(gitDir):
+        raise ValueError(f"Invalid git directory: '{gitDir}'")
+    return gitDir
 
 
 def getRawGithubURLForPath(filePath: str) -> str:
-	gitDirPath = getGitDir()
-	commitID = getLastCommitID(filePath)
-	relativePath = os.path.relpath(os.path.abspath(filePath), gitDirPath)
-	relativePath = relativePath.replace("\\", "/")
-	return f"{RAW_GITHUB_REPO_URL}/{commitID}/{relativePath}"
+    gitDirPath = getGitDir()
+    commitID = getLastCommitID(filePath)
+    relativePath = os.path.relpath(os.path.abspath(filePath), gitDirPath)
+    relativePath = relativePath.replace("\\", "/")
+    return f"{RAW_GITHUB_REPO_URL}/{commitID}/{relativePath}"
 
 
 def preprocessMarkdownLines(mdLines: Iterable[str]) -> Iterable[str]:
-	"""
+    """
 	Preprocess markdown lines such as removing inline markdown lint comments.\
 	:param mdLines: The markdown lines to preprocess
 	:returns: The preprocessed markdown lines
 	"""
-	for mdLine in mdLines:
-		# #18982: Remove markdown lint comments completely - not needed for intermediate markdown or final html.
-		mdLine = re_inlineMarkdownLintComment.sub(r"\1\2", mdLine)
-		yield mdLine
+    for mdLine in mdLines:
+        # #18982: Remove markdown lint comments completely - not needed for intermediate markdown or final html.
+        mdLine = re_inlineMarkdownLintComment.sub(r"\1\2", mdLine)
+        yield mdLine
 
 
 def skeletonizeLine(mdLine: str) -> str | None:
-	prefix = ""
-	suffix = ""
-	if (
-		mdLine.isspace()
-		or mdLine.strip() == "[TOC]"
-		or re_hiddenHeaderRow.match(mdLine)
-		or re_postTableHeaderLine.match(mdLine)
-	):
-		return None
-	elif m := re_heading.match(mdLine):
-		prefix, content, suffix = m.groups()
-	elif m := re_bullet.match(mdLine):
-		prefix, content = m.groups()
-	elif m := re_number.match(mdLine):
-		prefix, content = m.groups()
-	elif m := re_tableRow.match(mdLine):
-		prefix, content, suffix = m.groups()
-	elif m := re_kcTitle.match(mdLine):
-		prefix, content, suffix = m.groups()
-	elif m := re_kcSettingsSection.match(mdLine):
-		prefix, content, suffix = m.groups()
-	elif re_comment.match(mdLine):
-		return None
-	ID = str(uuid.uuid4())
-	return f"{prefix}$(ID:{ID}){suffix}\n"
+    prefix = ""
+    suffix = ""
+    if (
+        mdLine.isspace()
+        or mdLine.strip() == "[TOC]"
+        or re_hiddenHeaderRow.match(mdLine)
+        or re_postTableHeaderLine.match(mdLine)
+    ):
+        return None
+    elif m := re_heading.match(mdLine):
+        prefix, content, suffix = m.groups()
+    elif m := re_bullet.match(mdLine):
+        prefix, content = m.groups()
+    elif m := re_number.match(mdLine):
+        prefix, content = m.groups()
+    elif m := re_tableRow.match(mdLine):
+        prefix, content, suffix = m.groups()
+    elif m := re_kcTitle.match(mdLine):
+        prefix, content, suffix = m.groups()
+    elif m := re_kcSettingsSection.match(mdLine):
+        prefix, content, suffix = m.groups()
+    elif re_comment.match(mdLine):
+        return None
+    ID = str(uuid.uuid4())
+    return f"{prefix}$(ID:{ID}){suffix}\n"
 
 
 @dataclass
 class Result_generateSkeleton:
-	numTotalLines: int = 0
-	numTranslationPlaceholders: int = 0
+    numTotalLines: int = 0
+    numTranslationPlaceholders: int = 0
 
 
 def generateSkeleton(mdPath: str, outputPath: str) -> Result_generateSkeleton:
@@ -168,12 +168,12 @@ def generateSkeleton(mdPath: str, outputPath: str) -> Result_generateSkeleton:
 
 @dataclass
 class Result_updateSkeleton:
-	numAddedLines: int = 0
-	numAddedTranslationPlaceholders: int = 0
-	numRemovedLines: int = 0
-	numRemovedTranslationPlaceholders: int = 0
-	numUnchangedLines: int = 0
-	numUnchangedTranslationPlaceholders: int = 0
+    numAddedLines: int = 0
+    numAddedTranslationPlaceholders: int = 0
+    numRemovedLines: int = 0
+    numRemovedTranslationPlaceholders: int = 0
+    numUnchangedLines: int = 0
+    numUnchangedTranslationPlaceholders: int = 0
 
 
 def extractSkeleton(xliffPath: str, outputPath: str):
@@ -201,10 +201,10 @@ def extractSkeleton(xliffPath: str, outputPath: str):
 
 
 def updateSkeleton(
-	origMdPath: str,
-	newMdPath: str,
-	origSkelPath: str,
-	outputPath: str,
+    origMdPath: str,
+    newMdPath: str,
+    origSkelPath: str,
+    outputPath: str,
 ) -> Result_updateSkeleton:
 	print(
 		f"Creating updated skeleton file {prettyPathString(outputPath)} from {prettyPathString(origSkelPath)} with changes from {prettyPathString(origMdPath)} to {prettyPathString(newMdPath)}...",
@@ -256,13 +256,13 @@ def updateSkeleton(
 
 @dataclass
 class Result_generateXliff:
-	numTranslatableStrings: int = 0
+    numTranslatableStrings: int = 0
 
 
 def generateXliff(
-	mdPath: str,
-	outputPath: str,
-	skelPath: str | None = None,
+    mdPath: str,
+    outputPath: str,
+    skelPath: str | None = None,
 ) -> Result_generateXliff:
 	# If a skeleton file is not provided, first generate one
 	with contextlib.ExitStack() as stack:
@@ -349,13 +349,13 @@ def generateXliff(
 
 @dataclass
 class Result_translateXliff:
-	numTranslatedStrings: int = 0
+    numTranslatedStrings: int = 0
 
 
 def updateXliff(
-	xliffPath: str,
-	mdPath: str,
-	outputPath: str,
+    xliffPath: str,
+    mdPath: str,
+    outputPath: str,
 ):
 	# uses generateMarkdown, extractSkeleton, updateSkeleton, and generateXliff to generate an updated xliff file.
 	outputDir = os.path.dirname(outputPath)
@@ -401,11 +401,11 @@ def updateXliff(
 
 
 def translateXliff(
-	xliffPath: str,
-	lang: str,
-	pretranslatedMdPath: str,
-	outputPath: str,
-	allowBadAnchors: bool = False,
+    xliffPath: str,
+    lang: str,
+    pretranslatedMdPath: str,
+    outputPath: str,
+    allowBadAnchors: bool = False,
 ) -> Result_translateXliff:
 	print(
 		f"Creating {lang} translated xliff file {prettyPathString(outputPath)} from {prettyPathString(xliffPath)} using {prettyPathString(pretranslatedMdPath)}...",
@@ -487,10 +487,10 @@ def translateXliff(
 
 @dataclass
 class Result_generateMarkdown:
-	numTotalLines = 0
-	numTranslatableStrings = 0
-	numTranslatedStrings = 0
-	numBadTranslationStrings = 0
+    numTotalLines = 0
+    numTranslatableStrings = 0
+    numTranslatedStrings = 0
+    numBadTranslationStrings = 0
 
 
 def generateMarkdown(
@@ -618,8 +618,8 @@ def ensureMarkdownFilesMatch(path1: str, path2: str, allowBadAnchors: bool = Fal
 
 
 def markdownTranslateCommand(command: str, *args):
-	print(f"Running markdownTranslate command: {command} {' '.join(args)}")
-	subprocess.run(["python", __file__, command, *args], check=True)
+    print(f"Running markdownTranslate command: {command} {' '.join(args)}")
+    subprocess.run(["python", __file__, command, *args], check=True)
 
 
 def pretranslateAllPossibleLanguages(langsDir: str, mdBaseName: str):
