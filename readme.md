@@ -42,16 +42,26 @@ This repository is intended to be used as a submodule for [NVDA](https://github.
 
 To install all dependencies (including PyInstaller) and build a standalone executable using [uv](https://github.com/astral-sh/uv):
 
-1. Install all dependencies:
+1. Create virtual environment:
+
+	```sh
+	uv venv
+	```
+
+2. Activate the virtual environment:
+	- Windows: `.venv\Scripts\Activate.ps1`
+	- Linux/macOS: `source .venv/bin/activate`
+
+3. Install all dependencies:
 
 	```sh
 	uv pip install .
 	```
 
-2. Build the executable:
+4. Build the executable:
 
 	```sh
-	uv run pyinstaller --onefile source/l10nUtil.py
+	uv run pyinstaller l10nUtil.spec
 	```
 
 The resulting executable will be located in the `dist` directory.

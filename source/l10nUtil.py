@@ -26,6 +26,19 @@ from dataclasses import dataclass, field
 POLLING_INTERVAL_SECONDS = 5
 EXPORT_TIMEOUT_SECONDS = 60 * 10  # 10 minutes
 DEFAULT_CONFIG_FILE = "l10nConfig.yaml"
+BUNDLED_ADDON_CONFIG = "addonTemplate.yaml"
+
+
+def getBundledResourcePath(relativePath: str) -> str:
+	"""
+	Get the absolute path to a bundled resource file.
+	When running as a PyInstaller executable, resources are extracted to sys._MEIPASS.
+	When running as a script, resources are in the data/ folder relative to this file.
+	:param relativePath: The relative path to the resource (e.g., 'addonTemplate.yaml')
+	:return: The absolute path to the resource
+	"""
+	basePath = getattr(sys, '_MEIPASS', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data'))
+	return os.path.join(basePath, relativePath)
 
 
 def fetchCrowdinAuthToken() -> str:
@@ -518,6 +531,7 @@ class _PoChecker:
 	MSGID = "msgid"
 	MSGID_PLURAL = "msgid_plural"
 	MSGSTR = "msgstr"
+	MSGFMT_PATH = os.path.join(getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__))), '..', 'miscDeps', 'tools', 'msgfmt.exe')
 
 	def __init__(self, po: str):
 		"""Constructor.
@@ -583,27 +597,6 @@ class _PoChecker:
 			f'Translated: "{self._msgstr[-1]}"\n'
 			f"{'ERROR' if isError else 'WARNING'}: {alert}",
 		)
-
-	@property
-	def MSGFMT_PATH(self) -> str:
-		# When running as a PyInstaller frozen executable
-		if getattr(sys, 'frozen', False):
-			# PyInstaller extracts bundled files to sys._MEIPASS
-			_MSGFMT = os.path.join(getattr(sys, '_MEIPASS', ''), "msgfmt.exe")
-		else:
-			try:
-				# When running from source, miscDeps is the sibling of parent this script.
-				_MSGFMT = os.path.join(os.path.dirname(__file__), "..", "miscDeps", "tools", "msgfmt.exe")
-			except NameError:
-				# Fallback: When running from a distribution installation
-				_MSGFMT = os.path.join(sys.prefix, "miscDeps", "tools", "msgfmt.exe")
-
-		if not os.path.exists(_MSGFMT):
-			raise FileNotFoundError(
-				f"msgfmt executable not found at: {_MSGFMT}. "
-				"Please ensure msgfmt.exe is bundled with the executable or available in miscDeps/tools/."
-			)
-		return _MSGFMT
 
 	def _checkSyntax(self) -> None:
 		"""Check the syntax of the po file using msgfmt.
@@ -1007,8 +1000,14 @@ def main():
 		"-i", "--id", help="Crowdin project ID", type=int, default=None
 	)
 	args = args.parse_args()
-	if getattr(args, 'config', None) is not None:
-		loadConfig(args.config)
+	config_path = getattr(args, 'config', None)
+	if config_path is None:
+		# Try to find bundled addonTemplate.yaml as default
+		bundled_config = getBundledResourcePath(BUNDLED_ADDON_CONFIG)
+		if os.path.exists(bundled_config):
+			config_path = bundled_config
+	if config_path is not None:
+		loadConfig(config_path)
 	if getattr(args, 'id', None) is not None:
 		_crowdinContext.projectId = args.id
 	match args.command:
