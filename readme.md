@@ -1,6 +1,6 @@
 # Support for translations in NVDA and the add-on template
 
-This repository is intended to be used as a submodule for [NVDA](https://github.com/nvaccess/nvda) and the [add-on template](https://github.com/nvaccess/addonTemplate).
+This repository is intended to support translations for [NVDA](https://github.com/nvaccess/nvda) and add-ons using the [add-on template](https://github.com/nvaccess/addonTemplate).
 
 ## Available Commands
 
@@ -21,19 +21,19 @@ This repository is intended to be used as a submodule for [NVDA](https://github.
 
 - `downloadTranslationFile` - Download a translation file from Crowdin.
   - Required: `language` — language code to download; `crowdinFilePath` — path of the file in Crowdin.
-  - Optional: `localFilePath` — local path to save the file (defaults to `crowdinFilePath`); `-c`/`--config` — path to the configuration file; `-i`/`--id` — Crowdin project ID.
+  - Optional: `localFilePath` — local path to save the file (defaults to `crowdinFilePath`); `-c`/`--config` — path to the configuration file.
 
 - `uploadTranslationFile` - Upload a translation file to Crowdin.
   - Required: `language` — language code to upload; `crowdinFilePath` — path of the file in Crowdin.
-  - Optional: `localFilePath` — path to the local file to upload (defaults to `crowdinFilePath`); `-o`/`--old` — path to the old unchanged XLIFF file to upload only new or changed translations; `-c`/`--config` — path to the configuration file; `-i`/`--id` — Crowdin project ID.
+  - Optional: `localFilePath` — path to the local file to upload (defaults to `crowdinFilePath`); `-o`/`--old` — path to the old unchanged XLIFF file to upload only new or changed translations; `-c`/`--config` — path to the configuration file.
 
 - `uploadSourceFile` - Upload a source file to Crowdin.
   - Required: `localFilePath` — local path to the file to upload.
-  - Optional: `-c`/`--config` — path to the configuration file; `-i`/`--id` — Crowdin project ID.
+  - Optional: `-c`/`--config` — path to the configuration file.
 
 - `exportTranslations` - Export translation files from Crowdin as a bundle.
   - Required: `-o`/`--output` — directory to save the exported translation files.
-  - Optional: `-l`/`--language` — language code to export (exports all languages if not specified); `-c`/`--config` — path to the configuration file; `-i`/`--id` — Crowdin project ID.
+  - Optional: `-l`/`--language` — language code to export (exports all languages if not specified); `-c`/`--config` — path to the configuration file.
 
 - `writeConfig` - Write the current Crowdin configuration (project ID and file list) to a YAML file.
   - Optional: `-c`/`--configFile` — path for the YAML configuration file to write (defaults to `l10nConfig.yaml`); `-i`/`--id` — Crowdin project ID.
@@ -42,23 +42,13 @@ This repository is intended to be used as a submodule for [NVDA](https://github.
 
 To install all dependencies (including PyInstaller) and build a standalone executable using [uv](https://github.com/astral-sh/uv):
 
-1. Create virtual environment:
-
-	```sh
-	uv venv
-	```
-
-2. Activate the virtual environment:
-	- Windows: `.venv\Scripts\Activate.ps1`
-	- Linux/macOS: `source .venv/bin/activate`
-
-3. Install all dependencies:
+1. Install all dependencies:
 
 	```sh
 	uv pip install .
 	```
 
-4. Build the executable:
+2. Build the executable:
 
 	```sh
 	uv run pyinstaller l10nUtil.spec
