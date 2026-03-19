@@ -18,11 +18,12 @@ jobs:
         uses: astral-sh/setup-uv@v7
       - name: Build executable
         run: |
-          uv pip install .
-          uv run pyinstaller --onefile source/l10nUtil.py
+          uv run pip install .
+          uv run pyinstaller l10nUtil.spec
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: l10nUtil
           path: dist/l10nUtil.exe
+          archive: false
 
