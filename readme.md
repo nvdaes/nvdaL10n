@@ -21,19 +21,19 @@ This repository is intended to support translations for [NVDA](https://github.co
 
 - `downloadTranslationFile` - Download a translation file from Crowdin.
   - Required: `language` — language code to download; `crowdinFilePath` — path of the file in Crowdin.
-  - Optional: `localFilePath` — local path to save the file (defaults to `crowdinFilePath`); `-c`/`--config` — path to the configuration file (options: `nvda`, `addon`, `default` for l10nConfig.yaml, or a custom path; defaults to `default`).
+  - Optional: `localFilePath` — local path to save the file (defaults to `crowdinFilePath`); `-c`/`--config` — path to the configuration file (options: `nvda`, `addon`, `default` for l10nConfig.yaml, or a custom path; defaults to `nvda`).
 
 - `uploadTranslationFile` - Upload a translation file to Crowdin.
   - Required: `language` — language code to upload; `crowdinFilePath` — path of the file in Crowdin.
-  - Optional: `localFilePath` — path to the local file to upload (defaults to `crowdinFilePath`); `-o`/`--old` — path to the old unchanged XLIFF file to upload only new or changed translations; `-c`/`--config` — path to the configuration file (options: `nvda`, `addon`, `default` for l10nConfig.yaml, or a custom path; defaults to `default`).
+  - Optional: `localFilePath` — path to the local file to upload (defaults to `crowdinFilePath`); `-o`/`--old` — path to the old unchanged XLIFF file to upload only new or changed translations; `-c`/`--config` — path to the configuration file (options: `nvda`, `addon`, `default` for l10nConfig.yaml, or a custom path; defaults to `nvda`).
 
 - `uploadSourceFile` - Upload a source file to Crowdin.
   - Required: `localFilePath` — local path to the file to upload.
-  - Optional: `-c`/`--config` — path to the configuration file (options: `nvda`, `addon`, `default` for l10nConfig.yaml, or a custom path; defaults to `default`).
+  - Optional: `-c`/`--config` — path to the configuration file (options: `nvda`, `addon`, `default` for l10nConfig.yaml, or a custom path; defaults to `nvda`).
 
 - `exportTranslations` - Export translation files from Crowdin as a bundle.
   - Required: `-o`/`--output` — directory to save the exported translation files.
-  - Optional: `-l`/`--language` — language code to export (exports all languages if not specified); `-c`/`--config` — path to the configuration file (options: `nvda`, `addon`, `default` for l10nConfig.yaml, or a custom path; defaults to `default`).
+  - Optional: `-l`/`--language` — language code to export (exports all languages if not specified); `-c`/`--config` — path to the configuration file (options: `nvda`, `addon`, `default` for l10nConfig.yaml, or a custom path; defaults to `nvda`).
 
 - `writeConfig` - Write the current Crowdin configuration (project ID and file list) to a YAML file.
   - Optional: `-c`/`--configFile` — path for the YAML configuration file to write (defaults to `l10nConfig.yaml`); `-i`/`--id` — Crowdin project ID.
