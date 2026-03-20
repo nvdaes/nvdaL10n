@@ -56,6 +56,8 @@ def fetchCrowdinAuthToken() -> str:
 
 @dataclass
 class CrowdinContext:
+	"""Hold the Crowdin client and related information"""
+
 	_client: crowdin.CrowdinClient | None = None
 	projectId: int | None = None
 	files: dict[str, int] = field(default_factory=dict)
@@ -64,7 +66,7 @@ _crowdinContext = CrowdinContext()
 
 
 class ConfigFile(StrEnum):
-	"""Configuration files for nvdaL10n."""
+	"""Configuration files for nvdaL10n"""
 
 	NVDA = "nvda.yaml"
 	ADDON = "addonTemplate.yaml"
