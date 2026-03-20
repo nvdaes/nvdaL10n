@@ -2,6 +2,13 @@
 
 This repository is intended to support translations for [NVDA](https://github.com/nvaccess/nvda) and add-ons using the [add-on template](https://github.com/nvaccess/addonTemplate).
 
+The following projects can be selected:
+
+- NVDA: https://crowdin.com/project/nvda
+- NVDA add-ons (not maintained by NV Access): https://crowdin.com/project/nvdaaddons
+
+If you want to use a different Crowdin project, store the project and file IDs in a config file with the `writeConfig` command mentioned below.
+
 ## Available Commands
 
 - `checkPo` - Check one or more PO files for errors.
