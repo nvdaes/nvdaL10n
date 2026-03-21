@@ -84,8 +84,8 @@ ignore = [
 logger-objects = ["logHandler.log"]
 
 [tool.pyright]
-venvPath = ".venv"
-venv = "."
+venvPath = "."
+venv = ".venv"
 pythonPlatform = "Windows"
 typeCheckingMode = "strict"
 
