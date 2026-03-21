@@ -29,4 +29,3 @@ jobs:
           name: l10nUtil
           path: dist/l10nUtil.exe
           archive: false
-

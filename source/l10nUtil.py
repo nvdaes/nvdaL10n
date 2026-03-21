@@ -1,5 +1,5 @@
 # A part of NonVisual Desktop Access (NVDA)
-	
+
 # Copyright (C) 2024-2026 NV Access Limited, Noelia Ruiz Martínez
 # This file is covered by the GNU General Public License.
 # See the file COPYING for more details.
@@ -62,6 +62,7 @@ class CrowdinContext:
 	projectId: int | None = None
 	files: dict[str, int] = field(default_factory=dict)
 
+
 _crowdinContext = CrowdinContext()
 
 
@@ -80,12 +81,12 @@ class ConfigFile(StrEnum):
 		"""
 		if self.name == "DEFAULT":
 			return str(Path(self.value).resolve())
-		if hasattr(sys, '_MEIPASS'):
+		if hasattr(sys, "_MEIPASS"):
 			# PyInstaller bundled executable.
-			basePath = Path(getattr(sys, '_MEIPASS'))
+			basePath = Path(getattr(sys, "_MEIPASS"))
 		else:
 			# Development environment.
-			basePath = Path(__file__).parent.parent / 'data'
+			basePath = Path(__file__).parent.parent / "data"
 		return str((basePath / self.value).resolve())
 
 
@@ -382,7 +383,6 @@ def uploadSourceFile(localFilePath: str | None) -> None:
 		raise RuntimeError(f"Failed to add or update file in Crowdin: {e}")
 
 
-
 def exportTranslations(outputDir: str, language: str | None = None):
 	"""
 	Export translation files from Crowdin as a bundle.
@@ -471,7 +471,6 @@ def exportTranslations(outputDir: str, language: str | None = None):
 		print(f"\nExport complete! All translations extracted to '{outputDir}' directory.")
 	else:
 		print(f"\nExport complete! All {language} translations extracted to '{outputDir}' directory.")
-
 
 
 def getFiles() -> dict[str, int]:
@@ -613,10 +612,10 @@ class _PoChecker:
 
 	@property
 	def MSGFMT_PATH(self) -> str:
-		if hasattr(sys, '_MEIPASS'):
-			return str((Path(sys._MEIPASS) / 'msgfmt.exe').resolve())
+		if hasattr(sys, "_MEIPASS"):
+			return str((Path(sys._MEIPASS) / "msgfmt.exe").resolve())
 		else:
-			return str((Path(__file__).parent.parent / 'miscDeps' / 'tools' / 'msgfmt.exe').resolve())
+			return str((Path(__file__).parent.parent / "miscDeps" / "tools" / "msgfmt.exe").resolve())
 
 	def _checkSyntax(self) -> None:
 		"""Check the syntax of the po file using msgfmt.
@@ -942,7 +941,10 @@ def main():
 		help="The path to save the local file. If not provided, the Crowdin file path will be used.",
 	)
 	downloadTranslationFileCommand.add_argument(
-		"-c", "--config", help="Path to the configuration file", default=None
+		"-c",
+		"--config",
+		help="Path to the configuration file",
+		default=None,
 	)
 
 	uploadTranslationFileCommand = commands.add_parser(
@@ -970,7 +972,10 @@ def main():
 		help="The path to the local file to be uploaded. If not provided, the Crowdin file path will be used.",
 	)
 	uploadTranslationFileCommand.add_argument(
-		"-c", "--config", help="Path to the configuration file", default=None
+		"-c",
+		"--config",
+		help="Path to the configuration file",
+		default=None,
 	)
 	uploadSourceFileCommand = commands.add_parser(
 		"uploadSourceFile",
@@ -981,7 +986,10 @@ def main():
 		help="The local path to the file.",
 	)
 	uploadSourceFileCommand.add_argument(
-		"-c", "--config", help="Path to the configuration file", default=None
+		"-c",
+		"--config",
+		help="Path to the configuration file",
+		default=None,
 	)
 	exportTranslationsCommand = commands.add_parser(
 		"exportTranslations",
@@ -1000,17 +1008,27 @@ def main():
 		default=None,
 	)
 	exportTranslationsCommand.add_argument(
-		"-c", "--config", help="Path to the configuration file", default=None
+		"-c",
+		"--config",
+		help="Path to the configuration file",
+		default=None,
 	)
 	writeConfigCommand = commands.add_parser(
 		"writeConfig",
 		help="Write the current configuration to a YAML file. This includes the project ID and the list of files in Crowdin (optionally filtered).",
 	)
 	writeConfigCommand.add_argument(
-		"-c", "--configFile", help="The path to the YAML configuration file to write. If not provided, uses the default path 'l10nConfig.yaml'.", default=None
+		"-c",
+		"--configFile",
+		help="The path to the YAML configuration file to write. If not provided, uses the default path 'l10nConfig.yaml'.",
+		default=None,
 	)
 	writeConfigCommand.add_argument(
-		"-i", "--id", help="Crowdin project ID", type=int, default=None
+		"-i",
+		"--id",
+		help="Crowdin project ID",
+		type=int,
+		default=None,
 	)
 	args = args.parse_args()
 	configPath = getattr(args, "config", None)
@@ -1024,7 +1042,7 @@ def main():
 		# Not a ConfigFile member, use the provided path as-is.
 		pass
 	loadConfig(configPath)
-	if getattr(args, 'id', None) is not None:
+	if getattr(args, "id", None) is not None:
 		_crowdinContext.projectId = args.id
 	match args.command:
 		case "xliff2md":
