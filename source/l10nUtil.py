@@ -86,7 +86,7 @@ class ConfigFile(StrEnum):
 			basePath = Path(getattr(sys, "_MEIPASS"))
 		else:
 			# Development environment.
-			basePath = Path(__file__).parent.parent / "data"
+			basePath = Path(__file__).parent.parent / "config"
 		return str((basePath / self.value).resolve())
 
 
