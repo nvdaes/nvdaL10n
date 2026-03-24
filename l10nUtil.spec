@@ -16,7 +16,7 @@ a = Analysis(
 	['source\\l10nUtil.py'],
 	pathex=[],
 	binaries=[('miscDeps/tools/msgfmt.exe', '.')],
-	datas=[('data/addonTemplate.yaml', '.'), ('data/nvda.yaml', '.')],
+	datas=[('config/addonTemplate.yaml', '.'), ('config/nvda.yaml', '.')],
 	hiddenimports=all_hiddenimports,
 	hookspath=[],
 	hooksconfig={},
