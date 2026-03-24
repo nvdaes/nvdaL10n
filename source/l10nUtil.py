@@ -281,6 +281,8 @@ def downloadTranslationFile(crowdinFilePath: str, localFilePath: str, language: 
 	if crowdinFilePath not in crowdinFileIDs:
 		_crowdinContext.files = {**getFiles()}
 		crowdinFileIDs = _crowdinContext.files
+		if crowdinFilePath not in crowdinFileIDs:
+			raise ValueError(f"Crowdin file path not found: {crowdinFilePath}")	
 	fileId = crowdinFileIDs[crowdinFilePath]
 	print(f"Requesting export of {crowdinFilePath} for {language} from Crowdin")
 	res = getCrowdinClient().translations.export_project_translation(
