@@ -170,7 +170,7 @@ def preprocessXliff(xliffPath: str, outputPath: str):
 			corruptTargetcount += 1
 			target.text = sourceText
 			segment.set("state", "initial")
-			xliff.write(outputPath, encoding="utf-8")
+	xliff.write(outputPath, encoding="utf-8")
 	print(
 		f"Processed {segmentCount} segments, removing {emptyTargetCount} empty targets, {corruptTargetcount} corrupt targets",
 	)
