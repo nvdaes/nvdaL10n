@@ -1,5 +1,3 @@
-# -*- mode: python ; coding: utf-8 -*-
-
 from PyInstaller.utils.hooks import collect_submodules
 
 hiddenimports_pymdownx = collect_submodules('pymdownx')
