@@ -9,7 +9,7 @@ jobs:
   build:
     uses: ./.github/workflows/buildExecutable.yaml
 
-  pre-release:
+  Automatic-release:
     needs: build
     runs-on: ubuntu-latest
     permissions:
