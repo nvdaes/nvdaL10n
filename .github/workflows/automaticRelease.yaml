@@ -7,7 +7,7 @@ on:
 jobs:
 
   build:
-    uses: .github/workflows/buildExecutable.yaml
+    uses: ./.github/workflows/buildExecutable.yaml
 
   pre-release:
     needs: build
