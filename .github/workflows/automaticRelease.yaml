@@ -22,3 +22,5 @@ jobs:
     - name: Release
       run: |
         gh release create v${{ github.run_number }} l10nUtil.exe
+      env:
+        GH_TOKEN: ${{ github.token }}
