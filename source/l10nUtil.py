@@ -1064,7 +1064,7 @@ def main():
 		case "md2xliff":
 			markdownTranslate.generateXliff(
 				mdPath=args.mdPath,
-				xliffPath=args.xliffPath,
+				outputPath=args.xliffPath,
 			)
 		case "md2html":
 			md2html.main(
