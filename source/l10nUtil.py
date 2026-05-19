@@ -888,6 +888,9 @@ def main():
 	)
 	command_xliff2md.add_argument("xliffPath", help="Path to the xliff file")
 	command_xliff2md.add_argument("mdPath", help="Path to the resulting markdown file")
+	command_md2xliff = commands.add_parser("md2xliff", help="Convert markdown to xliff")
+	command_md2xliff.add_argument("mdPath", help="Path to the markdown file")
+	command_md2xliff.add_argument("xliffPath", help="Path to the resulting xliff file")
 	command_md2html = commands.add_parser("md2html", help="Convert markdown to html")
 	command_md2html.add_argument(
 		"-l",
@@ -1057,6 +1060,11 @@ def main():
 				xliffPath=args.xliffPath,
 				outputPath=args.mdPath,
 				translated=not args.untranslated,
+			)
+		case "md2xliff":
+			markdownTranslate.generateXliff(
+				mdPath=args.mdPath,
+				xliffPath=args.xliffPath,
 			)
 		case "md2html":
 			md2html.main(
