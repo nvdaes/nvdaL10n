@@ -1069,12 +1069,21 @@ def main():
 			)
 		case "md2xliff":
 			if args.oldXliffPath is not None:
-				preprocessXliff(args.oldXliffPath, args.oldXliffPath)
-				markdownTranslate.updateXliff(
-					xliffPath=args.oldXliffPath,
-					mdPath=args.mdPath,
-					outputPath=args.xliffPath,
+				temp_oldXliffFile = tempfile.NamedTemporaryFile(
+					suffix=Path(args.oldXliffPath).suffix or ".xliff",
+					delete=False,
 				)
+				temp_oldXliffFile.close()
+				try:
+					shutil.copyfile(args.oldXliffPath, temp_oldXliffFile.name)
+					preprocessXliff(temp_oldXliffFile.name, temp_oldXliffFile.name)
+					markdownTranslate.updateXliff(
+						xliffPath=temp_oldXliffFile.name,
+						mdPath=args.mdPath,
+						outputPath=args.xliffPath,
+					)
+				finally:
+					os.remove(temp_oldXliffFile.name)
 			else:
 				markdownTranslate.generateXliff(mdPath=args.mdPath, outputPath=args.xliffPath)
 		case "md2html":
