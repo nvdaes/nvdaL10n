@@ -97,7 +97,7 @@ def getRawGithubURLForPath(filePath: str) -> str:
 	return f"{rawGithubRepoURL}/{commitID}/{relativePath}"
 
 
-def getGithubRepoURL() -> str | None:
+def getGithubRepoURL() -> str:
 	"""
 	Get the GitHub repository URL from git remote origin.
 	return: The raw GitHub URL for the repository, or None if it cannot be determined.
