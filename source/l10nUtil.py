@@ -1069,7 +1069,7 @@ def main():
 			)
 		case "md2xliff":
 			if args.oldXliffPath is not None:
-				markdownTranslate.updateXliff(args.oldXliffPath, args.mdPath, args.xliffPath)
+				markdownTranslate.updateXliff(xliffPath=args.oldXliffPath, mdPath=args.mdPath, outputPath=args.xliffPath)
 			else:
 				markdownTranslate.generateXliff(mdPath=args.mdPath, outputPath=args.xliffPath)
 		case "md2html":
