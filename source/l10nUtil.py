@@ -1069,6 +1069,7 @@ def main():
 			)
 		case "md2xliff":
 			if args.oldXliffPath is not None:
+				preprocessXliff(args.oldXliffPath, args.oldXliffPath)
 				markdownTranslate.updateXliff(
 					xliffPath=args.oldXliffPath, mdPath=args.mdPath, outputPath=args.xliffPath
 				)
