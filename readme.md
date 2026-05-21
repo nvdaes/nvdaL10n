@@ -20,6 +20,7 @@ If you want to use a different Crowdin project, store the project and file IDs i
 
 - `md2xliff` - Convert a Markdown file to XLIFF.
   - Required: `mdPath` — path to the Markdown file; `xliffPath` — path for the resulting XLIFF file.
+  - Optional: `-o`/`--oldXliffPath` — path to an old XLIFF file to preserve existing translations and update the new XLIFF from.
 - `md2html` - Convert a Markdown file to HTML.
   - Required: `mdPath` — path to the Markdown file; `htmlPath` — path for the resulting HTML file.
   - Optional: `-l`/`--lang` — language code (default: `en`); `-t`/`--docType` — document type, one of `userGuide`, `developerGuide`, `changes`, `keyCommands`.

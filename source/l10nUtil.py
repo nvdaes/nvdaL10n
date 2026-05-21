@@ -891,6 +891,12 @@ def main():
 	command_md2xliff = commands.add_parser("md2xliff", help="Convert markdown to xliff")
 	command_md2xliff.add_argument("mdPath", help="Path to the markdown file")
 	command_md2xliff.add_argument("xliffPath", help="Path to the resulting xliff file")
+	command_md2xliff.add_argument(
+		"-o",
+		"--oldXliffPath",
+		help="Path to the old xliff file containing existing translations that should be preserved. If provided, existing translations will be preserved and not included in the resulting xliff file.",
+		default=None,
+	)
 	command_md2html = commands.add_parser("md2html", help="Convert markdown to html")
 	command_md2html.add_argument(
 		"-l",
@@ -1062,10 +1068,10 @@ def main():
 				translated=not args.untranslated,
 			)
 		case "md2xliff":
-			markdownTranslate.generateXliff(
-				mdPath=args.mdPath,
-				outputPath=args.xliffPath,
-			)
+			if args.oldXliffPath is not None:
+				markdownTranslate.updateXliff(args.oldXliffPath, args.mdPath, args.xliffPath)
+			else:
+				markdownTranslate.generateXliff(mdPath=args.mdPath, outputPath=args.xliffPath)
 		case "md2html":
 			md2html.main(
 				source=args.mdPath,
