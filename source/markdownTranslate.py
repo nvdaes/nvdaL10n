@@ -637,10 +637,10 @@ def ensureMarkdownFilesMatch(path1: str, path2: str, allowBadAnchors: bool = Fal
 					)
 					line1 = m1.group(1) + m1.group(2)
 					line2 = m2.group(1) + m2.group(2)
-			if line1 != line2:
-			raise ValueError(
-				f"Files do not match at line {lineNo}: {line1=} {line2=}",
-			)
+				if line1 != line2:
+					raise ValueError(
+						f"Files do not match at line {lineNo}: {line1=} {line2=}",
+					)
 		print("Files match")
 
 
