@@ -1071,7 +1071,9 @@ def main():
 			if args.oldXliffPath is not None:
 				preprocessXliff(args.oldXliffPath, args.oldXliffPath)
 				markdownTranslate.updateXliff(
-					xliffPath=args.oldXliffPath, mdPath=args.mdPath, outputPath=args.xliffPath
+					xliffPath=args.oldXliffPath,
+					mdPath=args.mdPath,
+					outputPath=args.xliffPath,
 				)
 			else:
 				markdownTranslate.generateXliff(mdPath=args.mdPath, outputPath=args.xliffPath)
