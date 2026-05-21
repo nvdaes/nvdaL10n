@@ -894,7 +894,7 @@ def main():
 	command_md2xliff.add_argument(
 		"-o",
 		"--oldXliffPath",
-		help="Path to the old xliff file containing existing translations that should be preserved. If provided, existing translations will be preserved and not included in the resulting xliff file.",
+		help="Path to the old xliff file containing existing translations that should be preserved. If provided, just new translations will be included in the resulting xliff file.",
 		default=None,
 	)
 	command_md2html = commands.add_parser("md2html", help="Convert markdown to html")
