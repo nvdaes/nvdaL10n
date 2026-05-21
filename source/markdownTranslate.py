@@ -98,9 +98,14 @@ def getRawGithubURLForPath(filePath: str) -> str:
 
 
 def getGithubRepoURL() -> str:
-	"""
-	Get the GitHub repository URL from git remote origin.
-	return: The raw GitHub URL for the repository.
+	"""Get the base ``raw.githubusercontent.com`` URL for the repository.
+
+	Reads the ``origin`` remote from the local git config and converts either
+	an SSH (``git@github.com:…``) or HTTPS (``https://github.com/…``) URL to
+	``https://raw.githubusercontent.com/{owner}/{repo}``.
+
+	:returns: Base raw-content URL, without a trailing slash, commit ID, or file path.
+	:raises ValueError: If the origin remote URL is not a recognised GitHub format.
 	"""
 	result = subprocess.run(
 		["git", "remote", "get-url", "origin"],
