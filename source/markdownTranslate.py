@@ -100,7 +100,7 @@ def getRawGithubURLForPath(filePath: str) -> str:
 def getGithubRepoURL() -> str:
 	"""
 	Get the GitHub repository URL from git remote origin.
-	return: The raw GitHub URL for the repository, or None if it cannot be determined.
+	return: The raw GitHub URL for the repository.
 	"""
 	result = subprocess.run(
 		["git", "remote", "get-url", "origin"],
