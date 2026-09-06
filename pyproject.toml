@@ -28,9 +28,10 @@ dependencies = [
 	"markdown-link-attr-modifier==0.2.1",
 	"mdx-gh-links==0.4",
 	"mdx-truly-sane-lists==1.3",
-	"nh3==0.2.19",
+	"nh3==0.3.6",
 	"pymdown-extensions==11.0.1",
-	"requests==2.33.0",
+	"pyphen==0.18.1",
+	"requests==2.34.2",
 ]
 [project.urls]
 Repository = "https://github.com/nvaccess/nvdaL10n"
@@ -89,8 +90,6 @@ python-platform = "win32"
 # Tell ty where to load python code from (ported from pyright's extraPaths).
 extra-paths = [
 	"./source",
-	# Used internally in NVDA
-	"./miscDeps/python",
 ]
 
 [tool.ty.src]
