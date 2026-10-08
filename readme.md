@@ -1,5 +1,5 @@
 # Support for translations in NVDA and add-ons using the add-on template
-
+Line for testing
 This repository is intended to support translations for [NVDA](https://github.com/nvaccess/nvda) and add-ons using the [add-on template](https://github.com/nvaccess/addonTemplate).
 
 The following projects can be selected:
